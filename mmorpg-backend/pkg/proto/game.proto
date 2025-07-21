@@ -1,0 +1,336 @@
+syntax = "proto3";
+
+package mmorpg;
+
+option go_package = "github.com/mmorpg-template/backend/pkg/proto";
+
+import "google/protobuf/timestamp.proto";
+import "base.proto";
+import "character.proto";
+
+// Game logic messages
+
+// Generic action request
+message GameActionRequest {
+    string player_id = 1;
+    ActionType action_type = 2;
+    string target_id = 3;          // Target entity ID
+    string action_id = 4;          // Specific action/skill/item ID
+    map<string, string> parameters = 5;
+    google.protobuf.Timestamp timestamp = 6;
+}
+
+// Generic action response
+message GameActionResponse {
+    bool success = 1;
+    string action_id = 2;
+    string message = 3;
+    ErrorCode error_code = 4;
+    map<string, string> results = 5;
+}
+
+// Inventory update
+message InventoryUpdate {
+    string player_id = 1;
+    repeated InventorySlot slots = 2;
+    int32 total_slots = 3;
+    int32 used_slots = 4;
+}
+
+// Inventory slot
+message InventorySlot {
+    int32 slot_index = 1;
+    Item item = 2;
+    int32 quantity = 3;
+}
+
+// Item definition
+message Item {
+    string item_id = 1;
+    string item_type = 2;
+    string name = 3;
+    string description = 4;
+    string icon_id = 5;
+    ItemRarity rarity = 6;
+    
+    // Stack info
+    int32 max_stack = 7;
+    bool is_unique = 8;
+    bool is_quest_item = 9;
+    bool is_bound = 10;
+    
+    // Requirements
+    int32 required_level = 11;
+    CharacterClass required_class = 12;
+    
+    // Stats/Effects
+    map<string, int32> stats = 13;
+    repeated ItemEffect effects = 14;
+    
+    // Value
+    int64 sell_price = 15;
+    int64 buy_price = 16;
+    
+    // Equipment specific
+    string equipment_slot = 17;
+    int32 durability = 18;
+    int32 max_durability = 19;
+}
+
+// Item effect
+message ItemEffect {
+    string effect_type = 1;
+    int32 value = 2;
+    float duration = 3;
+    float chance = 4;              // Proc chance
+}
+
+// Stats update
+message StatsUpdate {
+    string player_id = 1;
+    CharacterStats stats = 2;
+    CharacterAttributes attributes = 3;
+    int32 level = 4;
+    int64 experience = 5;
+    int64 experience_to_next_level = 6;
+}
+
+// Quest update
+message QuestUpdate {
+    string player_id = 1;
+    repeated QuestInfo active_quests = 2;
+    repeated QuestInfo completed_quests = 3;
+    repeated string available_quest_ids = 4;
+}
+
+// Quest information
+message QuestInfo {
+    string quest_id = 1;
+    string quest_name = 2;
+    string description = 3;
+    QuestStatus status = 4;
+    
+    repeated QuestObjective objectives = 5;
+    repeated QuestReward rewards = 6;
+    
+    int32 recommended_level = 7;
+    bool is_main_quest = 8;
+    bool is_daily_quest = 9;
+    
+    google.protobuf.Timestamp accepted_at = 10;
+    google.protobuf.Timestamp completed_at = 11;
+}
+
+// Quest objective
+message QuestObjective {
+    string objective_id = 1;
+    string description = 2;
+    ObjectiveType type = 3;
+    string target_id = 4;
+    int32 current_progress = 5;
+    int32 required_progress = 6;
+    bool is_completed = 7;
+    bool is_optional = 8;
+}
+
+// Quest reward
+message QuestReward {
+    RewardType type = 1;
+    string reward_id = 2;
+    int32 quantity = 3;
+}
+
+// Combat action
+message CombatAction {
+    string attacker_id = 1;
+    string target_id = 2;
+    string skill_id = 3;
+    CombatActionType action_type = 4;
+    google.protobuf.Timestamp timestamp = 5;
+}
+
+// Combat result
+message CombatResult {
+    string action_id = 1;
+    bool success = 2;
+    
+    repeated CombatEffect effects = 3;
+    string failure_reason = 4;
+}
+
+// Combat effect
+message CombatEffect {
+    string target_id = 1;
+    CombatEffectType effect_type = 2;
+    int32 value = 3;
+    bool is_critical = 4;
+    bool is_blocked = 5;
+    bool is_dodged = 6;
+    bool is_resisted = 7;
+}
+
+// Trade request
+message TradeRequest {
+    string initiator_id = 1;
+    string target_player_id = 2;
+}
+
+// Trade update
+message TradeUpdate {
+    string trade_id = 1;
+    TradeState state = 2;
+    
+    TradeOffer initiator_offer = 3;
+    TradeOffer target_offer = 4;
+}
+
+// Trade offer
+message TradeOffer {
+    string player_id = 1;
+    repeated TradeItem items = 2;
+    int64 gold = 3;
+    bool locked = 4;
+    bool accepted = 5;
+}
+
+// Trade item
+message TradeItem {
+    string item_id = 1;
+    int32 quantity = 2;
+    int32 inventory_slot = 3;
+}
+
+// Skill/Ability use
+message SkillUseRequest {
+    string player_id = 1;
+    string skill_id = 2;
+    string target_id = 3;
+    Vector3 target_position = 4;
+}
+
+// Skill result
+message SkillUseResult {
+    bool success = 1;
+    string skill_id = 2;
+    float cooldown = 3;
+    string failure_reason = 4;
+    repeated CombatEffect effects = 5;
+}
+
+// Loot
+message LootDropped {
+    string entity_id = 1;
+    string loot_id = 2;
+    Vector3 position = 3;
+    repeated LootItem items = 4;
+    repeated string allowed_looters = 5;
+    google.protobuf.Timestamp expires_at = 6;
+}
+
+// Loot item
+message LootItem {
+    Item item = 1;
+    int32 quantity = 2;
+}
+
+// Currency update
+message CurrencyUpdate {
+    string player_id = 1;
+    map<string, int64> currencies = 2;  // currency_type -> amount
+}
+
+// Achievement unlocked
+message AchievementUnlocked {
+    string player_id = 1;
+    string achievement_id = 2;
+    string achievement_name = 3;
+    string description = 4;
+    int32 points = 5;
+    google.protobuf.Timestamp unlocked_at = 6;
+}
+
+// Enums
+
+enum ActionType {
+    ACTION_TYPE_UNSPECIFIED = 0;
+    ACTION_TYPE_USE_ITEM = 1;
+    ACTION_TYPE_USE_SKILL = 2;
+    ACTION_TYPE_INTERACT = 3;
+    ACTION_TYPE_LOOT = 4;
+    ACTION_TYPE_TRADE = 5;
+    ACTION_TYPE_CRAFT = 6;
+    ACTION_TYPE_QUEST_ACCEPT = 7;
+    ACTION_TYPE_QUEST_COMPLETE = 8;
+    ACTION_TYPE_QUEST_ABANDON = 9;
+}
+
+enum ItemRarity {
+    ITEM_RARITY_UNSPECIFIED = 0;
+    ITEM_RARITY_COMMON = 1;
+    ITEM_RARITY_UNCOMMON = 2;
+    ITEM_RARITY_RARE = 3;
+    ITEM_RARITY_EPIC = 4;
+    ITEM_RARITY_LEGENDARY = 5;
+    ITEM_RARITY_ARTIFACT = 6;
+}
+
+enum QuestStatus {
+    QUEST_STATUS_UNSPECIFIED = 0;
+    QUEST_STATUS_AVAILABLE = 1;
+    QUEST_STATUS_ACTIVE = 2;
+    QUEST_STATUS_COMPLETED = 3;
+    QUEST_STATUS_FAILED = 4;
+    QUEST_STATUS_ABANDONED = 5;
+}
+
+enum ObjectiveType {
+    OBJECTIVE_TYPE_UNSPECIFIED = 0;
+    OBJECTIVE_TYPE_KILL = 1;
+    OBJECTIVE_TYPE_COLLECT = 2;
+    OBJECTIVE_TYPE_INTERACT = 3;
+    OBJECTIVE_TYPE_REACH_LOCATION = 4;
+    OBJECTIVE_TYPE_TALK_TO = 5;
+    OBJECTIVE_TYPE_DELIVER = 6;
+    OBJECTIVE_TYPE_CRAFT = 7;
+    OBJECTIVE_TYPE_USE_SKILL = 8;
+}
+
+enum RewardType {
+    REWARD_TYPE_UNSPECIFIED = 0;
+    REWARD_TYPE_EXPERIENCE = 1;
+    REWARD_TYPE_GOLD = 2;
+    REWARD_TYPE_ITEM = 3;
+    REWARD_TYPE_REPUTATION = 4;
+    REWARD_TYPE_SKILL_POINT = 5;
+    REWARD_TYPE_ACHIEVEMENT = 6;
+}
+
+enum CombatActionType {
+    COMBAT_ACTION_UNSPECIFIED = 0;
+    COMBAT_ACTION_BASIC_ATTACK = 1;
+    COMBAT_ACTION_SKILL = 2;
+    COMBAT_ACTION_ITEM = 3;
+    COMBAT_ACTION_DEFEND = 4;
+}
+
+enum CombatEffectType {
+    COMBAT_EFFECT_UNSPECIFIED = 0;
+    COMBAT_EFFECT_DAMAGE = 1;
+    COMBAT_EFFECT_HEAL = 2;
+    COMBAT_EFFECT_BUFF = 3;
+    COMBAT_EFFECT_DEBUFF = 4;
+    COMBAT_EFFECT_DOT = 5;         // Damage over time
+    COMBAT_EFFECT_HOT = 6;         // Heal over time
+    COMBAT_EFFECT_STUN = 7;
+    COMBAT_EFFECT_SLOW = 8;
+    COMBAT_EFFECT_ROOT = 9;
+    COMBAT_EFFECT_SILENCE = 10;
+}
+
+enum TradeState {
+    TRADE_STATE_UNSPECIFIED = 0;
+    TRADE_STATE_PENDING = 1;
+    TRADE_STATE_ACTIVE = 2;
+    TRADE_STATE_COMPLETED = 3;
+    TRADE_STATE_CANCELLED = 4;
+}

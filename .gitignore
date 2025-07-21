@@ -1,0 +1,87 @@
+# Unreal Engine
+UnrealEngine/Binaries/
+UnrealEngine/Build/
+UnrealEngine/DerivedDataCache/
+UnrealEngine/Intermediate/
+UnrealEngine/Saved/
+UnrealEngine/.vs/
+UnrealEngine/*.sln
+UnrealEngine/*.xcodeproj
+UnrealEngine/*.xcworkspace
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+bin/
+
+# Go workspace files
+go.work
+go.work.sum
+
+# Docker
+.env
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+*.code-workspace
+
+# Build outputs
+build/
+dist/
+out/
+
+# Dependencies
+node_modules/
+
+# Protobuf generated files (optional - remove if you want to track them)
+# *.pb.go
+# *.pb.cc
+# *.pb.h
+
+# Sensitive data
+*.pem
+*.key
+secrets/
+.env.local
+.env.production
+
+# Tools
+tools/*.zip
+tools/protoc-*-win64/

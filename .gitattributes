@@ -1,0 +1,46 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force LF for these files
+*.go text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.proto text eol=lf
+Makefile text eol=lf
+Dockerfile text eol=lf
+
+# Force CRLF for Windows-specific files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.uasset binary
+*.umap binary
+
+# Unreal Engine
+*.uproject text eol=crlf
+*.uplugin text eol=crlf
+*.cpp text
+*.h text
+*.cs text
+
+# Diff settings
+*.cpp diff=cpp
+*.h diff=cpp
+*.cs diff=csharp
+*.go diff=golang

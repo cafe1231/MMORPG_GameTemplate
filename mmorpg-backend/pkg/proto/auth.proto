@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package mmorpg;
+
+option go_package = "github.com/mmorpg-template/backend/pkg/proto";
+
+import "google/protobuf/timestamp.proto";
+import "base.proto";
+
+// Authentication messages
+
+// Login request
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+    string client_version = 3;
+    string device_id = 4;          // Optional device identifier for security
+    string platform = 5;           // Platform: windows, mac, linux, etc.
+}
+
+// Login response
+message LoginResponse {
+    bool success = 1;
+    string access_token = 2;       // JWT access token
+    string refresh_token = 3;      // JWT refresh token
+    string session_id = 4;         // Session identifier
+    int32 expires_in = 5;          // Token expiry in seconds
+    string error_message = 6;      // Error message if success is false
+    ErrorCode error_code = 7;      // Error code if success is false
+    
+    // Additional user info
+    UserInfo user_info = 8;
+}
+
+// Register request
+message RegisterRequest {
+    string email = 1;
+    string password = 2;
+    string username = 3;           // Display name
+    string client_version = 4;
+    bool accept_terms = 5;         // Must be true to register
+    optional string referral_code = 6;
+}
+
+// Register response
+message RegisterResponse {
+    bool success = 1;
+    string user_id = 2;
+    string error_message = 3;
+    ErrorCode error_code = 4;
+    
+    // Validation errors
+    map<string, string> field_errors = 5;
+}
+
+// Logout request
+message LogoutRequest {
+    string session_id = 1;
+    bool logout_all_devices = 2;   // Logout from all devices
+}
+
+// Logout response
+message LogoutResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// Refresh token request
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+// Refresh token response
+message RefreshTokenResponse {
+    bool success = 1;
+    string access_token = 2;
+    string refresh_token = 3;      // New refresh token
+    int32 expires_in = 4;
+    string error_message = 5;
+    ErrorCode error_code = 6;
+}
+
+// Password reset request
+message PasswordResetRequest {
+    string email = 1;
+}
+
+// Password reset response
+message PasswordResetResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// Change password request
+message ChangePasswordRequest {
+    string current_password = 1;
+    string new_password = 2;
+    string session_id = 3;
+}
+
+// Change password response
+message ChangePasswordResponse {
+    bool success = 1;
+    string message = 2;
+    ErrorCode error_code = 3;
+}
+
+// User information
+message UserInfo {
+    string user_id = 1;
+    string email = 2;
+    string username = 3;
+    google.protobuf.Timestamp created_at = 4;
+    google.protobuf.Timestamp last_login = 5;
+    bool email_verified = 6;
+    AccountStatus account_status = 7;
+    repeated string roles = 8;     // User roles for RBAC
+    
+    // Account limits
+    int32 max_characters = 9;
+    int32 character_count = 10;
+    
+    // Premium/subscription info
+    bool is_premium = 11;
+    google.protobuf.Timestamp premium_expires = 12;
+}
+
+// Account status
+enum AccountStatus {
+    ACCOUNT_STATUS_UNSPECIFIED = 0;
+    ACCOUNT_STATUS_ACTIVE = 1;
+    ACCOUNT_STATUS_SUSPENDED = 2;
+    ACCOUNT_STATUS_BANNED = 3;
+    ACCOUNT_STATUS_PENDING_VERIFICATION = 4;
+    ACCOUNT_STATUS_DELETED = 5;
+}
+
+// Session information
+message SessionInfo {
+    string session_id = 1;
+    string user_id = 2;
+    string device_id = 3;
+    string ip_address = 4;
+    string user_agent = 5;
+    google.protobuf.Timestamp created_at = 6;
+    google.protobuf.Timestamp last_active = 7;
+    google.protobuf.Timestamp expires_at = 8;
+}
