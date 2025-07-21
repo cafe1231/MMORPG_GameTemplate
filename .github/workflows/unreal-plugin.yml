@@ -132,7 +132,7 @@ jobs:
 
     - name: Upload Build Artifacts
       if: success()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: plugin-build-windows
         path: Build/${{ env.PLUGIN_NAME }}
@@ -167,7 +167,7 @@ jobs:
         doxygen Doxyfile
 
     - name: Upload Documentation
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: api-documentation
         path: docs/api/html
