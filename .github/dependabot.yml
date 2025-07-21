@@ -8,8 +8,8 @@ updates:
       day: "monday"
       time: "08:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "mmorpg-maintainers"
+    # reviewers: # Commented out - add your GitHub username or team here
+    #   - "cafe1231"
     labels:
       - "dependencies"
       - "go"
@@ -26,8 +26,8 @@ updates:
       day: "monday"
       time: "08:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "mmorpg-maintainers"
+    # reviewers: # Commented out - add your GitHub username or team here
+    #   - "cafe1231"
     labels:
       - "dependencies"
       - "github-actions"
@@ -36,14 +36,14 @@ updates:
 
   # Docker base images
   - package-ecosystem: "docker"
-    directory: "/mmorpg-backend/build/docker/gateway"
+    directory: "/mmorpg-backend/deployments/docker"
     schedule:
       interval: "weekly"
       day: "tuesday"
       time: "08:00"
     open-pull-requests-limit: 3
-    reviewers:
-      - "mmorpg-maintainers"
+    # reviewers: # Commented out - add your GitHub username or team here
+    #   - "cafe1231"
     labels:
       - "dependencies"
       - "docker"
