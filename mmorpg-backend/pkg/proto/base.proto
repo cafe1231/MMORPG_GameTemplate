@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package mmorpg;
+
+option go_package = "github.com/mmorpg-template/backend/pkg/proto";
+
+import "google/protobuf/timestamp.proto";
+
+// Base message envelope for all game communications
+message GameMessage {
+    uint32 version = 1;                    // Protocol version
+    uint32 sequence = 2;                   // Message sequence number
+    google.protobuf.Timestamp timestamp = 3; // Message timestamp
+    MessageType type = 4;                  // Message type
+    bytes payload = 5;                     // Actual message data (serialized specific message)
+    
+    // Optional fields for reliability
+    optional uint32 ack_sequence = 6;      // Acknowledge received message
+    optional bool requires_ack = 7;        // Whether this message requires acknowledgment
+}
+
+// Message types enum
+enum MessageType {
+    MESSAGE_TYPE_UNSPECIFIED = 0;
+    
+    // Authentication messages (1-99)
+    MESSAGE_TYPE_AUTH_LOGIN_REQUEST = 1;
+    MESSAGE_TYPE_AUTH_LOGIN_RESPONSE = 2;
+    MESSAGE_TYPE_AUTH_REGISTER_REQUEST = 3;
+    MESSAGE_TYPE_AUTH_REGISTER_RESPONSE = 4;
+    MESSAGE_TYPE_AUTH_LOGOUT_REQUEST = 5;
+    MESSAGE_TYPE_AUTH_LOGOUT_RESPONSE = 6;
+    MESSAGE_TYPE_AUTH_REFRESH_TOKEN_REQUEST = 7;
+    MESSAGE_TYPE_AUTH_REFRESH_TOKEN_RESPONSE = 8;
+    
+    // Character messages (100-199)
+    MESSAGE_TYPE_CHARACTER_LIST_REQUEST = 100;
+    MESSAGE_TYPE_CHARACTER_LIST_RESPONSE = 101;
+    MESSAGE_TYPE_CHARACTER_CREATE_REQUEST = 102;
+    MESSAGE_TYPE_CHARACTER_CREATE_RESPONSE = 103;
+    MESSAGE_TYPE_CHARACTER_DELETE_REQUEST = 104;
+    MESSAGE_TYPE_CHARACTER_DELETE_RESPONSE = 105;
+    MESSAGE_TYPE_CHARACTER_SELECT_REQUEST = 106;
+    MESSAGE_TYPE_CHARACTER_SELECT_RESPONSE = 107;
+    
+    // World messages (200-299)
+    MESSAGE_TYPE_WORLD_ENTER_REQUEST = 200;
+    MESSAGE_TYPE_WORLD_ENTER_RESPONSE = 201;
+    MESSAGE_TYPE_WORLD_LEAVE_REQUEST = 202;
+    MESSAGE_TYPE_WORLD_LEAVE_RESPONSE = 203;
+    MESSAGE_TYPE_WORLD_POSITION_UPDATE = 204;
+    MESSAGE_TYPE_WORLD_AREA_UPDATE = 205;
+    MESSAGE_TYPE_WORLD_ENTITY_SPAWN = 206;
+    MESSAGE_TYPE_WORLD_ENTITY_DESPAWN = 207;
+    
+    // Game messages (300-399)
+    MESSAGE_TYPE_GAME_ACTION_REQUEST = 300;
+    MESSAGE_TYPE_GAME_ACTION_RESPONSE = 301;
+    MESSAGE_TYPE_GAME_INVENTORY_UPDATE = 302;
+    MESSAGE_TYPE_GAME_STATS_UPDATE = 303;
+    MESSAGE_TYPE_GAME_QUEST_UPDATE = 304;
+    MESSAGE_TYPE_GAME_COMBAT_ACTION = 305;
+    MESSAGE_TYPE_GAME_COMBAT_RESULT = 306;
+    
+    // Chat messages (400-499)
+    MESSAGE_TYPE_CHAT_MESSAGE = 400;
+    MESSAGE_TYPE_CHAT_WHISPER = 401;
+    MESSAGE_TYPE_CHAT_CHANNEL_JOIN = 402;
+    MESSAGE_TYPE_CHAT_CHANNEL_LEAVE = 403;
+    MESSAGE_TYPE_CHAT_CHANNEL_LIST = 404;
+    
+    // System messages (500-599)
+    MESSAGE_TYPE_SYSTEM_PING = 500;
+    MESSAGE_TYPE_SYSTEM_PONG = 501;
+    MESSAGE_TYPE_SYSTEM_ERROR = 502;
+    MESSAGE_TYPE_SYSTEM_NOTIFICATION = 503;
+    MESSAGE_TYPE_SYSTEM_MAINTENANCE = 504;
+    MESSAGE_TYPE_SYSTEM_VERSION_CHECK = 505;
+}
+
+// Common error codes
+enum ErrorCode {
+    ERROR_CODE_UNSPECIFIED = 0;
+    ERROR_CODE_INVALID_REQUEST = 1;
+    ERROR_CODE_UNAUTHORIZED = 2;
+    ERROR_CODE_FORBIDDEN = 3;
+    ERROR_CODE_NOT_FOUND = 4;
+    ERROR_CODE_ALREADY_EXISTS = 5;
+    ERROR_CODE_RATE_LIMITED = 6;
+    ERROR_CODE_SERVER_ERROR = 7;
+    ERROR_CODE_SERVICE_UNAVAILABLE = 8;
+    ERROR_CODE_TIMEOUT = 9;
+    ERROR_CODE_INVALID_CREDENTIALS = 10;
+    ERROR_CODE_ACCOUNT_LOCKED = 11;
+    ERROR_CODE_CHARACTER_LIMIT_REACHED = 12;
+    ERROR_CODE_INVALID_CHARACTER_NAME = 13;
+    ERROR_CODE_WORLD_FULL = 14;
+    ERROR_CODE_INVALID_ACTION = 15;
+    ERROR_CODE_INSUFFICIENT_RESOURCES = 16;
+    ERROR_CODE_INVENTORY_FULL = 17;
+    ERROR_CODE_QUEST_NOT_AVAILABLE = 18;
+    ERROR_CODE_COMBAT_NOT_ALLOWED = 19;
+}
+
+// Common data structures
+message Vector3 {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+message Rotation {
+    float yaw = 1;
+    float pitch = 2;
+    float roll = 3;
+}
+
+message Transform {
+    Vector3 position = 1;
+    Rotation rotation = 2;
+    Vector3 scale = 3;
+}
+
+// Base error response
+message ErrorResponse {
+    ErrorCode code = 1;
+    string message = 2;
+    map<string, string> details = 3;
+}

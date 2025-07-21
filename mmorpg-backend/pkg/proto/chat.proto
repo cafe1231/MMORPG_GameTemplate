@@ -1,0 +1,223 @@
+syntax = "proto3";
+
+package mmorpg;
+
+option go_package = "github.com/mmorpg-template/backend/pkg/proto";
+
+import "google/protobuf/timestamp.proto";
+import "base.proto";
+
+// Chat messages
+
+// Chat message
+message ChatMessage {
+    string message_id = 1;
+    string sender_id = 2;
+    string sender_name = 3;
+    ChatChannel channel = 4;
+    string channel_id = 5;         // For custom channels
+    string message = 6;
+    google.protobuf.Timestamp timestamp = 7;
+    
+    // Optional fields
+    string recipient_id = 8;       // For whispers
+    string recipient_name = 9;     // For whispers
+    repeated string mentioned_players = 10;
+    
+    // Metadata
+    string sender_guild = 11;
+    int32 sender_level = 12;
+    ChatMessageType message_type = 13;
+    
+    // Moderation
+    bool is_filtered = 14;         // Contains filtered content
+    bool is_reported = 15;
+}
+
+// Whisper message
+message WhisperMessage {
+    string sender_id = 1;
+    string sender_name = 2;
+    string recipient_id = 3;
+    string recipient_name = 4;
+    string message = 5;
+    google.protobuf.Timestamp timestamp = 6;
+}
+
+// Channel join request
+message ChannelJoinRequest {
+    string player_id = 1;
+    ChatChannel channel = 2;
+    string channel_id = 3;         // For custom channels
+    string password = 4;           // For password-protected channels
+}
+
+// Channel join response
+message ChannelJoinResponse {
+    bool success = 1;
+    ChatChannel channel = 2;
+    string channel_id = 3;
+    string channel_name = 4;
+    repeated ChannelMember members = 5;
+    string error_message = 6;
+    ErrorCode error_code = 7;
+}
+
+// Channel leave request
+message ChannelLeaveRequest {
+    string player_id = 1;
+    ChatChannel channel = 2;
+    string channel_id = 3;
+}
+
+// Channel leave response
+message ChannelLeaveResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// Channel list request
+message ChannelListRequest {
+    string player_id = 1;
+    ChannelListType list_type = 2;
+}
+
+// Channel list response
+message ChannelListResponse {
+    repeated ChannelInfo channels = 1;
+}
+
+// Channel information
+message ChannelInfo {
+    ChatChannel channel_type = 1;
+    string channel_id = 2;
+    string channel_name = 3;
+    int32 member_count = 4;
+    bool is_joined = 5;
+    bool is_password_protected = 6;
+    bool is_moderated = 7;
+    string owner_id = 8;
+    string description = 9;
+}
+
+// Channel member
+message ChannelMember {
+    string player_id = 1;
+    string player_name = 2;
+    ChannelRole role = 3;
+    bool is_muted = 4;
+    google.protobuf.Timestamp joined_at = 5;
+}
+
+// Chat command (admin/moderator)
+message ChatCommand {
+    string issuer_id = 1;
+    ChatCommandType command_type = 2;
+    string target_player_id = 3;
+    ChatChannel channel = 4;
+    string channel_id = 5;
+    int32 duration_minutes = 6;    // For mute/ban
+    string reason = 7;
+}
+
+// Chat command response
+message ChatCommandResponse {
+    bool success = 1;
+    string message = 2;
+    ErrorCode error_code = 3;
+}
+
+// Chat history request
+message ChatHistoryRequest {
+    string player_id = 1;
+    ChatChannel channel = 2;
+    string channel_id = 3;
+    int32 message_count = 4;       // Number of messages to retrieve
+    string before_message_id = 5;  // For pagination
+}
+
+// Chat history response
+message ChatHistoryResponse {
+    repeated ChatMessage messages = 1;
+    bool has_more = 2;
+}
+
+// Report message
+message ReportChatMessage {
+    string reporter_id = 1;
+    string message_id = 2;
+    ReportReason reason = 3;
+    string additional_info = 4;
+}
+
+// Report response
+message ReportChatResponse {
+    bool success = 1;
+    string report_id = 2;
+    string message = 3;
+}
+
+// Enums
+
+enum ChatChannel {
+    CHAT_CHANNEL_UNSPECIFIED = 0;
+    CHAT_CHANNEL_GLOBAL = 1;       // Server-wide
+    CHAT_CHANNEL_ZONE = 2;         // Current zone
+    CHAT_CHANNEL_LOCAL = 3;        // Proximity based
+    CHAT_CHANNEL_PARTY = 4;        // Party members
+    CHAT_CHANNEL_GUILD = 5;        // Guild members
+    CHAT_CHANNEL_RAID = 6;         // Raid members
+    CHAT_CHANNEL_TRADE = 7;        // Trade channel
+    CHAT_CHANNEL_SYSTEM = 8;       // System messages
+    CHAT_CHANNEL_WHISPER = 9;      // Private messages
+    CHAT_CHANNEL_CUSTOM = 10;      // User-created channels
+}
+
+enum ChatMessageType {
+    CHAT_MESSAGE_TYPE_UNSPECIFIED = 0;
+    CHAT_MESSAGE_TYPE_PLAYER = 1;
+    CHAT_MESSAGE_TYPE_SYSTEM = 2;
+    CHAT_MESSAGE_TYPE_ANNOUNCEMENT = 3;
+    CHAT_MESSAGE_TYPE_WARNING = 4;
+    CHAT_MESSAGE_TYPE_ERROR = 5;
+    CHAT_MESSAGE_TYPE_EMOTE = 6;
+    CHAT_MESSAGE_TYPE_ACHIEVEMENT = 7;
+    CHAT_MESSAGE_TYPE_LOOT = 8;
+}
+
+enum ChannelRole {
+    CHANNEL_ROLE_UNSPECIFIED = 0;
+    CHANNEL_ROLE_MEMBER = 1;
+    CHANNEL_ROLE_MODERATOR = 2;
+    CHANNEL_ROLE_OWNER = 3;
+}
+
+enum ChannelListType {
+    CHANNEL_LIST_TYPE_UNSPECIFIED = 0;
+    CHANNEL_LIST_TYPE_JOINED = 1;
+    CHANNEL_LIST_TYPE_AVAILABLE = 2;
+    CHANNEL_LIST_TYPE_ALL = 3;
+}
+
+enum ChatCommandType {
+    CHAT_COMMAND_TYPE_UNSPECIFIED = 0;
+    CHAT_COMMAND_TYPE_MUTE = 1;
+    CHAT_COMMAND_TYPE_UNMUTE = 2;
+    CHAT_COMMAND_TYPE_KICK = 3;
+    CHAT_COMMAND_TYPE_BAN = 4;
+    CHAT_COMMAND_TYPE_UNBAN = 5;
+    CHAT_COMMAND_TYPE_PROMOTE = 6;
+    CHAT_COMMAND_TYPE_DEMOTE = 7;
+    CHAT_COMMAND_TYPE_CLEAR = 8;
+}
+
+enum ReportReason {
+    REPORT_REASON_UNSPECIFIED = 0;
+    REPORT_REASON_SPAM = 1;
+    REPORT_REASON_HARASSMENT = 2;
+    REPORT_REASON_HATE_SPEECH = 3;
+    REPORT_REASON_INAPPROPRIATE = 4;
+    REPORT_REASON_SCAM = 5;
+    REPORT_REASON_ADVERTISING = 6;
+    REPORT_REASON_OTHER = 7;
+}

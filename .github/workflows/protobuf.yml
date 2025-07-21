@@ -1,0 +1,171 @@
+name: Protocol Buffers CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'mmorpg-backend/pkg/proto/**'
+      - '.github/workflows/protobuf.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'mmorpg-backend/pkg/proto/**'
+      - '.github/workflows/protobuf.yml'
+
+env:
+  PROTOC_VERSION: '25.1'
+  GO_VERSION: '1.21'
+
+jobs:
+  validate:
+    name: Validate Proto Files
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install protoc
+      run: |
+        curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v${{ env.PROTOC_VERSION }}/protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip
+        unzip protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip -d $HOME/.local
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install buf
+      run: |
+        curl -sSL https://github.com/bufbuild/buf/releases/download/v1.28.1/buf-Linux-x86_64 -o /usr/local/bin/buf
+        chmod +x /usr/local/bin/buf
+
+    - name: Validate Proto Syntax
+      working-directory: ./mmorpg-backend/pkg/proto
+      run: |
+        for proto in *.proto; do
+          echo "Validating $proto..."
+          protoc --proto_path=. $proto --descriptor_set_out=/dev/null
+        done
+
+    - name: Check Proto Style
+      working-directory: ./mmorpg-backend
+      run: |
+        # Create buf.yaml configuration
+        cat > buf.yaml << EOF
+        version: v1
+        breaking:
+          use:
+            - FILE
+        lint:
+          use:
+            - DEFAULT
+          except:
+            - PACKAGE_VERSION_SUFFIX
+          ignore:
+            - pkg/proto/google
+        EOF
+        
+        # Run buf lint
+        buf lint pkg/proto
+
+  generate-go:
+    name: Generate Go Code
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Install protoc
+      run: |
+        curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v${{ env.PROTOC_VERSION }}/protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip
+        unzip protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip -d $HOME/.local
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install protoc plugins
+      run: |
+        go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+    - name: Generate Go code
+      working-directory: ./mmorpg-backend
+      run: |
+        mkdir -p pkg/proto/gen/go
+        for proto in pkg/proto/*.proto; do
+          protoc --proto_path=pkg/proto \
+                 --go_out=pkg/proto/gen/go \
+                 --go_opt=paths=source_relative \
+                 --go-grpc_out=pkg/proto/gen/go \
+                 --go-grpc_opt=paths=source_relative \
+                 $(basename $proto)
+        done
+
+    - name: Check for uncommitted changes
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "Uncommitted changes detected. Please regenerate proto files locally."
+          git diff
+          exit 1
+        fi
+
+  generate-cpp:
+    name: Generate C++ Code
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install protoc
+      run: |
+        curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v${{ env.PROTOC_VERSION }}/protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip
+        unzip protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip -d $HOME/.local
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Generate C++ code
+      working-directory: ./mmorpg-backend
+      run: |
+        mkdir -p pkg/proto/gen/cpp
+        for proto in pkg/proto/*.proto; do
+          protoc --proto_path=pkg/proto \
+                 --cpp_out=pkg/proto/gen/cpp \
+                 $(basename $proto)
+        done
+
+    - name: Upload C++ Generated Files
+      uses: actions/upload-artifact@v3
+      with:
+        name: proto-cpp-generated
+        path: mmorpg-backend/pkg/proto/gen/cpp
+
+  documentation:
+    name: Generate Proto Documentation
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install protoc
+      run: |
+        curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v${{ env.PROTOC_VERSION }}/protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip
+        unzip protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip -d $HOME/.local
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install protoc-gen-doc
+      run: |
+        wget https://github.com/pseudomuto/protoc-gen-doc/releases/download/v1.5.1/protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+        tar -xzf protoc-gen-doc_1.5.1_linux_amd64.tar.gz
+        sudo mv protoc-gen-doc /usr/local/bin/
+
+    - name: Generate Documentation
+      working-directory: ./mmorpg-backend
+      run: |
+        mkdir -p docs/proto
+        protoc --proto_path=pkg/proto \
+               --doc_out=docs/proto \
+               --doc_opt=markdown,README.md \
+               pkg/proto/*.proto
+
+    - name: Upload Documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: proto-documentation
+        path: mmorpg-backend/docs/proto

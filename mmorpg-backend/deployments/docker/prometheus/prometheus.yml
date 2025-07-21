@@ -1,0 +1,84 @@
+# Prometheus configuration for MMORPG services
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'mmorpg-monitor'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Gateway service
+  - job_name: 'gateway'
+    static_configs:
+      - targets: ['gateway:9090']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'gateway'
+
+  # Auth service
+  - job_name: 'auth'
+    static_configs:
+      - targets: ['auth:9091']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'auth'
+
+  # Character service
+  - job_name: 'character'
+    static_configs:
+      - targets: ['character:9092']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'character'
+
+  # World service
+  - job_name: 'world'
+    static_configs:
+      - targets: ['world:9093']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'world'
+
+  # Game service
+  - job_name: 'game'
+    static_configs:
+      - targets: ['game:9094']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'game'
+
+  # PostgreSQL exporter (if added)
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # Redis exporter (if added)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # NATS exporter
+  - job_name: 'nats'
+    static_configs:
+      - targets: ['nats:8222']
+    metrics_path: '/metrics'

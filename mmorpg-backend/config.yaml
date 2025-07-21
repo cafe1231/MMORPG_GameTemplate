@@ -1,0 +1,19 @@
+server:
+  port: "8090"
+  host: "0.0.0.0"
+  
+database:
+  url: "postgres://dev:dev@localhost:5432/mmorpg?sslmode=disable"
+  
+redis:
+  url: "redis://localhost:6379"
+  
+nats:
+  url: "nats://localhost:4222"
+  
+security:
+  jwtSecret: "dev-secret-change-in-production"
+  
+metrics:
+  port: "9090"
+  enabled: true

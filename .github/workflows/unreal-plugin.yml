@@ -1,0 +1,221 @@
+name: Unreal Plugin CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'UnrealEngine/**'
+      - '.github/workflows/unreal-plugin.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'UnrealEngine/**'
+      - '.github/workflows/unreal-plugin.yml'
+
+env:
+  UE_VERSION: '5.6'
+  PLUGIN_NAME: 'MMORPGTemplate'
+
+jobs:
+  validate:
+    name: Validate Plugin
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Validate Plugin Structure
+      shell: pwsh
+      run: |
+        $pluginFile = "UnrealEngine/Plugins/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.uplugin"
+        if (!(Test-Path $pluginFile)) {
+          Write-Error "Plugin file not found: $pluginFile"
+          exit 1
+        }
+        
+        try {
+          $json = Get-Content $pluginFile | ConvertFrom-Json
+          Write-Host "Plugin Name: $($json.FriendlyName)"
+          Write-Host "Plugin Version: $($json.VersionName)"
+          Write-Host "Engine Version: $($json.EngineVersion)"
+        } catch {
+          Write-Error "Failed to parse plugin file"
+          exit 1
+        }
+
+  code-analysis:
+    name: Code Analysis
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup clang-format
+      shell: pwsh
+      run: |
+        choco install llvm -y
+        refreshenv
+
+    - name: Check C++ Formatting
+      shell: pwsh
+      run: |
+        $files = Get-ChildItem -Path "UnrealEngine/Plugins/${{ env.PLUGIN_NAME }}/Source" -Recurse -Include *.cpp,*.h
+        $errors = 0
+        foreach ($file in $files) {
+          clang-format -style=file -output-replacements-xml $file | Select-String "<replacement " | ForEach-Object { $errors++ }
+        }
+        if ($errors -gt 0) {
+          Write-Warning "Found $errors formatting issues"
+        }
+
+    - name: Check for Common Issues
+      shell: pwsh
+      run: |
+        $sourceDir = "UnrealEngine/Plugins/${{ env.PLUGIN_NAME }}/Source"
+        
+        # Check for TODO/FIXME comments
+        $todos = Select-String -Path "$sourceDir\**\*.cpp","$sourceDir\**\*.h" -Pattern "TODO|FIXME" -SimpleMatch
+        if ($todos) {
+          Write-Host "Found TODO/FIXME comments:"
+          $todos | ForEach-Object { Write-Host "  $_" }
+        }
+        
+        # Check for large functions (>100 lines)
+        Get-ChildItem -Path $sourceDir -Recurse -Include *.cpp | ForEach-Object {
+          $content = Get-Content $_.FullName
+          $inFunction = $false
+          $functionStart = 0
+          $lineNum = 0
+          
+          foreach ($line in $content) {
+            $lineNum++
+            if ($line -match '^\s*\{' -and !$inFunction) {
+              $inFunction = $true
+              $functionStart = $lineNum
+            } elseif ($line -match '^\s*\}' -and $inFunction) {
+              $functionLength = $lineNum - $functionStart
+              if ($functionLength -gt 100) {
+                Write-Warning "Large function in $($_.Name) at line $functionStart ($functionLength lines)"
+              }
+              $inFunction = $false
+            }
+          }
+        }
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    needs: [validate, code-analysis]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.3
+
+    - name: Install Unreal Engine
+      shell: pwsh
+      run: |
+        Write-Host "Note: In a real CI environment, you would need Unreal Engine installed"
+        Write-Host "This workflow assumes UE${{ env.UE_VERSION }} is available at C:\Program Files\Epic Games\UE_${{ env.UE_VERSION }}"
+
+    - name: Generate Project Files
+      shell: pwsh
+      run: |
+        # This would normally run:
+        # & "C:\Program Files\Epic Games\UE_${{ env.UE_VERSION }}\Engine\Build\BatchFiles\GenerateProjectFiles.bat" -projectfiles -project="$pwd\UnrealEngine\MMORPGTemplate.uproject" -game -rocket -progress
+        Write-Host "Skipping project generation (requires UE installation)"
+
+    - name: Build Plugin
+      shell: pwsh
+      run: |
+        # This would normally run:
+        # & "C:\Program Files\Epic Games\UE_${{ env.UE_VERSION }}\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="$pwd\UnrealEngine\Plugins\${{ env.PLUGIN_NAME }}\${{ env.PLUGIN_NAME }}.uplugin" -Package="$pwd\Build\${{ env.PLUGIN_NAME }}" -Rocket
+        Write-Host "Skipping plugin build (requires UE installation)"
+
+    - name: Upload Build Artifacts
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: plugin-build-windows
+        path: Build/${{ env.PLUGIN_NAME }}
+
+  documentation:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Doxygen
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y doxygen graphviz
+
+    - name: Generate API Documentation
+      run: |
+        cat > Doxyfile << EOF
+        PROJECT_NAME = "MMORPG Template Plugin"
+        PROJECT_NUMBER = "1.0.0"
+        INPUT = UnrealEngine/Plugins/${{ env.PLUGIN_NAME }}/Source
+        RECURSIVE = YES
+        OUTPUT_DIRECTORY = docs/api
+        GENERATE_HTML = YES
+        GENERATE_LATEX = NO
+        EXTRACT_ALL = YES
+        EXTRACT_PRIVATE = YES
+        EXTRACT_STATIC = YES
+        FILE_PATTERNS = *.h *.cpp
+        EOF
+        
+        doxygen Doxyfile
+
+    - name: Upload Documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-documentation
+        path: docs/api/html
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-windows]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: plugin-build-windows
+        path: ./release
+
+    - name: Create Release Archive
+      run: |
+        cd release
+        zip -r ../MMORPGTemplate-${{ github.sha }}.zip .
+        cd ..
+
+    - name: Create Release Notes
+      run: |
+        cat > RELEASE_NOTES.md << EOF
+        # MMORPG Template Plugin Release
+        
+        ## Version: ${GITHUB_SHA::7}
+        ## Date: $(date -u +"%Y-%m-%d")
+        
+        ### Changes
+        - Automated build from commit ${GITHUB_SHA}
+        
+        ### Installation
+        1. Extract the zip file to your project's Plugins folder
+        2. Regenerate project files
+        3. Rebuild your project
+        
+        ### Requirements
+        - Unreal Engine ${{ env.UE_VERSION }}
+        - Visual Studio 2022 or later
+        - Windows 10/11 (64-bit)
+        EOF
+
+    - name: Upload Release Asset
+      if: success()
+      run: |
+        echo "Release archive created: MMORPGTemplate-${{ github.sha }}.zip"
+        echo "In a real workflow, this would upload to GitHub Releases"

@@ -1,0 +1,223 @@
+syntax = "proto3";
+
+package mmorpg;
+
+option go_package = "github.com/mmorpg-template/backend/pkg/proto";
+
+import "google/protobuf/timestamp.proto";
+import "base.proto";
+
+// Character messages
+
+// List characters request
+message CharacterListRequest {
+    string user_id = 1;
+    string session_id = 2;
+}
+
+// List characters response
+message CharacterListResponse {
+    bool success = 1;
+    repeated CharacterInfo characters = 2;
+    int32 max_characters = 3;
+    string error_message = 4;
+    ErrorCode error_code = 5;
+}
+
+// Create character request
+message CharacterCreateRequest {
+    string name = 1;
+    CharacterClass class = 2;
+    CharacterRace race = 3;
+    Gender gender = 4;
+    CharacterAppearance appearance = 5;
+    string session_id = 6;
+}
+
+// Create character response
+message CharacterCreateResponse {
+    bool success = 1;
+    CharacterInfo character = 2;
+    string error_message = 3;
+    ErrorCode error_code = 4;
+    map<string, string> validation_errors = 5;
+}
+
+// Delete character request
+message CharacterDeleteRequest {
+    string character_id = 1;
+    string session_id = 2;
+    string confirmation_code = 3;  // Safety confirmation
+}
+
+// Delete character response
+message CharacterDeleteResponse {
+    bool success = 1;
+    string message = 2;
+    ErrorCode error_code = 3;
+}
+
+// Select character request
+message CharacterSelectRequest {
+    string character_id = 1;
+    string session_id = 2;
+}
+
+// Select character response
+message CharacterSelectResponse {
+    bool success = 1;
+    CharacterData character_data = 2;
+    string world_server_url = 3;   // Which world server to connect to
+    string world_token = 4;        // Token for world server authentication
+    string error_message = 5;
+    ErrorCode error_code = 6;
+}
+
+// Character information (for list/preview)
+message CharacterInfo {
+    string character_id = 1;
+    string name = 2;
+    CharacterClass class = 3;
+    CharacterRace race = 4;
+    Gender gender = 5;
+    int32 level = 6;
+    string location = 7;           // Last known location name
+    google.protobuf.Timestamp created_at = 8;
+    google.protobuf.Timestamp last_played = 9;
+    int64 playtime_seconds = 10;
+    
+    // Basic appearance for character select screen
+    CharacterAppearance appearance = 11;
+    
+    // Equipment preview
+    repeated EquipmentPreview equipment_preview = 12;
+}
+
+// Full character data (when entering game)
+message CharacterData {
+    string character_id = 1;
+    string name = 2;
+    CharacterClass class = 3;
+    CharacterRace race = 4;
+    Gender gender = 5;
+    
+    // Stats
+    CharacterStats stats = 6;
+    CharacterAttributes attributes = 7;
+    
+    // Progress
+    int32 level = 8;
+    int64 experience = 9;
+    int64 experience_to_next_level = 10;
+    
+    // Location
+    Transform last_transform = 11;
+    string last_zone_id = 12;
+    
+    // Appearance
+    CharacterAppearance appearance = 13;
+    
+    // Equipment
+    map<string, string> equipped_items = 14;  // slot -> item_id
+    
+    // Currencies
+    map<string, int64> currencies = 15;
+    
+    // Timestamps
+    google.protobuf.Timestamp created_at = 16;
+    google.protobuf.Timestamp last_played = 17;
+    int64 playtime_seconds = 18;
+}
+
+// Character classes
+enum CharacterClass {
+    CHARACTER_CLASS_UNSPECIFIED = 0;
+    CHARACTER_CLASS_WARRIOR = 1;
+    CHARACTER_CLASS_MAGE = 2;
+    CHARACTER_CLASS_ARCHER = 3;
+    CHARACTER_CLASS_ROGUE = 4;
+    CHARACTER_CLASS_PRIEST = 5;
+    CHARACTER_CLASS_PALADIN = 6;
+    CHARACTER_CLASS_WARLOCK = 7;
+    CHARACTER_CLASS_DRUID = 8;
+}
+
+// Character races
+enum CharacterRace {
+    CHARACTER_RACE_UNSPECIFIED = 0;
+    CHARACTER_RACE_HUMAN = 1;
+    CHARACTER_RACE_ELF = 2;
+    CHARACTER_RACE_DWARF = 3;
+    CHARACTER_RACE_ORC = 4;
+    CHARACTER_RACE_GNOME = 5;
+    CHARACTER_RACE_UNDEAD = 6;
+    CHARACTER_RACE_TROLL = 7;
+    CHARACTER_RACE_HALFLING = 8;
+}
+
+// Gender
+enum Gender {
+    GENDER_UNSPECIFIED = 0;
+    GENDER_MALE = 1;
+    GENDER_FEMALE = 2;
+    GENDER_OTHER = 3;
+}
+
+// Character appearance customization
+message CharacterAppearance {
+    int32 face_type = 1;
+    int32 hair_style = 2;
+    int32 hair_color = 3;
+    int32 skin_color = 4;
+    int32 eye_color = 5;
+    float height = 6;              // Normalized 0-1
+    float build = 7;               // Normalized 0-1
+    
+    // Additional customization options
+    map<string, int32> custom_options = 8;
+}
+
+// Character stats (combat related)
+message CharacterStats {
+    int32 health = 1;
+    int32 max_health = 2;
+    int32 mana = 3;
+    int32 max_mana = 4;
+    int32 stamina = 5;
+    int32 max_stamina = 6;
+    
+    int32 attack_power = 7;
+    int32 spell_power = 8;
+    int32 defense = 9;
+    int32 magic_resistance = 10;
+    
+    float critical_chance = 11;
+    float critical_damage = 12;
+    float dodge_chance = 13;
+    float block_chance = 14;
+    
+    float movement_speed = 15;
+    float attack_speed = 16;
+    float cast_speed = 17;
+}
+
+// Character attributes (base stats)
+message CharacterAttributes {
+    int32 strength = 1;
+    int32 agility = 2;
+    int32 intelligence = 3;
+    int32 wisdom = 4;
+    int32 constitution = 5;
+    int32 charisma = 6;
+    
+    // Points available to spend
+    int32 unspent_points = 7;
+}
+
+// Equipment preview for character select
+message EquipmentPreview {
+    string slot = 1;
+    string item_id = 2;
+    string icon_id = 3;
+    int32 quality = 4;             // Item quality/rarity
+}

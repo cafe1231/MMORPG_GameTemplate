@@ -1,0 +1,324 @@
+syntax = "proto3";
+
+package mmorpg;
+
+option go_package = "github.com/mmorpg-template/backend/pkg/proto";
+
+import "google/protobuf/timestamp.proto";
+import "base.proto";
+import "character.proto";
+
+// World/Real-time messages
+
+// Enter world request
+message WorldEnterRequest {
+    string character_id = 1;
+    string world_token = 2;        // Token from character select
+    Transform spawn_transform = 3;  // Where to spawn
+    string zone_id = 4;
+}
+
+// Enter world response
+message WorldEnterResponse {
+    bool success = 1;
+    string player_id = 2;          // Unique player instance ID
+    string zone_id = 3;
+    Transform spawn_transform = 4;
+    google.protobuf.Timestamp server_time = 5;
+    int32 tick_rate = 6;           // Server tick rate
+    string error_message = 7;
+    ErrorCode error_code = 8;
+}
+
+// Leave world request
+message WorldLeaveRequest {
+    string player_id = 1;
+    string reason = 2;             // logout, disconnect, zone_change, etc.
+}
+
+// Leave world response  
+message WorldLeaveResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// Player position update (client -> server)
+message PlayerPositionUpdate {
+    string player_id = 1;
+    Transform transform = 2;
+    Vector3 velocity = 3;
+    Vector3 acceleration = 4;
+    uint32 movement_flags = 5;     // Walking, running, jumping, etc.
+    google.protobuf.Timestamp timestamp = 6;
+    uint32 sequence = 7;           // For lag compensation
+}
+
+// Area update (server -> client)
+message AreaUpdate {
+    repeated PlayerState players = 1;
+    repeated NPCState npcs = 2;
+    repeated WorldObject objects = 3;
+    repeated EntityEvent events = 4;
+    google.protobuf.Timestamp server_time = 5;
+    uint32 tick = 6;
+}
+
+// Player state in the world
+message PlayerState {
+    string player_id = 1;
+    string character_name = 2;
+    CharacterClass class = 3;
+    int32 level = 4;
+    
+    Transform transform = 5;
+    Vector3 velocity = 6;
+    uint32 movement_flags = 7;
+    
+    // Visible stats
+    int32 health = 8;
+    int32 max_health = 9;
+    int32 mana = 10;
+    int32 max_mana = 11;
+    
+    // Status
+    repeated StatusEffect status_effects = 12;
+    CombatState combat_state = 13;
+    
+    // Animation
+    string current_animation = 14;
+    float animation_time = 15;
+    
+    // Equipment visibility
+    map<string, string> visible_equipment = 16;
+}
+
+// NPC state in the world
+message NPCState {
+    string npc_id = 1;
+    string npc_type = 2;
+    string display_name = 3;
+    
+    Transform transform = 4;
+    Vector3 velocity = 5;
+    
+    // Stats
+    int32 health = 6;
+    int32 max_health = 7;
+    int32 level = 8;
+    
+    // Behavior
+    NPCBehaviorState behavior_state = 9;
+    string target_id = 10;         // Current target if any
+    
+    // Status
+    repeated StatusEffect status_effects = 11;
+    bool is_hostile = 12;
+    bool is_quest_giver = 13;
+    bool is_vendor = 14;
+    
+    // Animation
+    string current_animation = 15;
+    float animation_time = 16;
+}
+
+// World object (items, interactables, etc.)
+message WorldObject {
+    string object_id = 1;
+    string object_type = 2;
+    Transform transform = 3;
+    
+    // Interaction
+    bool is_interactable = 4;
+    string interaction_type = 5;
+    float interaction_range = 6;
+    
+    // State
+    map<string, string> properties = 7;
+    bool is_lootable = 8;
+    repeated string allowed_looters = 9;  // Player IDs who can loot
+}
+
+// Entity spawn event
+message EntitySpawn {
+    oneof entity {
+        PlayerState player = 1;
+        NPCState npc = 2;
+        WorldObject object = 3;
+    }
+}
+
+// Entity despawn event
+message EntityDespawn {
+    string entity_id = 1;
+    EntityType entity_type = 2;
+    string reason = 3;             // death, logout, out_of_range, etc.
+}
+
+// Entity events
+message EntityEvent {
+    string entity_id = 1;
+    string event_type = 2;
+    google.protobuf.Timestamp timestamp = 3;
+    
+    oneof event_data {
+        DamageEvent damage = 4;
+        HealEvent heal = 5;
+        DeathEvent death = 6;
+        LevelUpEvent level_up = 7;
+        EmoteEvent emote = 8;
+        SoundEvent sound = 9;
+        VisualEffectEvent visual_effect = 10;
+    }
+}
+
+// Damage event
+message DamageEvent {
+    string source_id = 1;
+    string target_id = 2;
+    int32 damage = 3;
+    DamageType damage_type = 4;
+    bool is_critical = 5;
+    bool is_blocked = 6;
+    bool is_dodged = 7;
+}
+
+// Heal event
+message HealEvent {
+    string source_id = 1;
+    string target_id = 2;
+    int32 heal_amount = 3;
+    string heal_type = 4;          // spell, potion, regen, etc.
+    bool is_critical = 5;
+}
+
+// Death event
+message DeathEvent {
+    string entity_id = 1;
+    string killer_id = 2;
+    string death_type = 3;         // combat, fall, drowning, etc.
+    Transform death_location = 4;
+}
+
+// Level up event
+message LevelUpEvent {
+    string player_id = 1;
+    int32 new_level = 2;
+    int32 stat_points_gained = 3;
+    int32 skill_points_gained = 4;
+}
+
+// Emote event
+message EmoteEvent {
+    string entity_id = 1;
+    string emote_id = 2;
+    string target_id = 3;          // Optional target
+}
+
+// Sound event
+message SoundEvent {
+    string sound_id = 1;
+    Transform location = 2;
+    float volume = 3;
+    float range = 4;
+}
+
+// Visual effect event
+message VisualEffectEvent {
+    string effect_id = 1;
+    Transform location = 2;
+    float duration = 3;
+    float scale = 4;
+    string attach_to_entity = 5;   // Optional entity to attach to
+}
+
+// Status effect
+message StatusEffect {
+    string effect_id = 1;
+    string effect_type = 2;
+    string icon_id = 3;
+    float duration = 4;
+    int32 stacks = 5;
+    string source_id = 6;
+}
+
+// Zone change request
+message ZoneChangeRequest {
+    string player_id = 1;
+    string target_zone_id = 2;
+    Transform target_transform = 3;
+}
+
+// Zone change response
+message ZoneChangeResponse {
+    bool success = 1;
+    string new_zone_id = 2;
+    string world_server_url = 3;   // If changing servers
+    string world_token = 4;        // New token if changing servers
+    Transform spawn_transform = 5;
+    string error_message = 6;
+    ErrorCode error_code = 7;
+}
+
+// Interest management request
+message InterestUpdateRequest {
+    string player_id = 1;
+    float view_distance = 2;
+    repeated string interest_filters = 3;  // Types of entities to include
+}
+
+// Enums
+
+enum EntityType {
+    ENTITY_TYPE_UNSPECIFIED = 0;
+    ENTITY_TYPE_PLAYER = 1;
+    ENTITY_TYPE_NPC = 2;
+    ENTITY_TYPE_OBJECT = 3;
+    ENTITY_TYPE_ITEM = 4;
+    ENTITY_TYPE_PROJECTILE = 5;
+}
+
+enum DamageType {
+    DAMAGE_TYPE_UNSPECIFIED = 0;
+    DAMAGE_TYPE_PHYSICAL = 1;
+    DAMAGE_TYPE_MAGICAL = 2;
+    DAMAGE_TYPE_FIRE = 3;
+    DAMAGE_TYPE_FROST = 4;
+    DAMAGE_TYPE_LIGHTNING = 5;
+    DAMAGE_TYPE_POISON = 6;
+    DAMAGE_TYPE_HOLY = 7;
+    DAMAGE_TYPE_SHADOW = 8;
+}
+
+enum CombatState {
+    COMBAT_STATE_UNSPECIFIED = 0;
+    COMBAT_STATE_OUT_OF_COMBAT = 1;
+    COMBAT_STATE_IN_COMBAT = 2;
+    COMBAT_STATE_EVADING = 3;
+    COMBAT_STATE_DEAD = 4;
+}
+
+enum NPCBehaviorState {
+    NPC_BEHAVIOR_UNSPECIFIED = 0;
+    NPC_BEHAVIOR_IDLE = 1;
+    NPC_BEHAVIOR_PATROLLING = 2;
+    NPC_BEHAVIOR_CHASING = 3;
+    NPC_BEHAVIOR_ATTACKING = 4;
+    NPC_BEHAVIOR_FLEEING = 5;
+    NPC_BEHAVIOR_RETURNING = 6;
+    NPC_BEHAVIOR_INTERACTING = 7;
+}
+
+// Movement flags (bitfield)
+enum MovementFlag {
+    MOVEMENT_FLAG_NONE = 0;
+    MOVEMENT_FLAG_FORWARD = 1;
+    MOVEMENT_FLAG_BACKWARD = 2;
+    MOVEMENT_FLAG_LEFT = 4;
+    MOVEMENT_FLAG_RIGHT = 8;
+    MOVEMENT_FLAG_JUMPING = 16;
+    MOVEMENT_FLAG_FALLING = 32;
+    MOVEMENT_FLAG_SWIMMING = 64;
+    MOVEMENT_FLAG_FLYING = 128;
+    MOVEMENT_FLAG_SPRINTING = 256;
+    MOVEMENT_FLAG_SNEAKING = 512;
+}
