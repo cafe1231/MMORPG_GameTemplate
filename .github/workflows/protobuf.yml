@@ -131,7 +131,7 @@ jobs:
         done
 
     - name: Upload C++ Generated Files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: proto-cpp-generated
         path: mmorpg-backend/pkg/proto/gen/cpp
@@ -165,7 +165,7 @@ jobs:
                pkg/proto/*.proto
 
     - name: Upload Documentation
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: proto-documentation
         path: mmorpg-backend/docs/proto
