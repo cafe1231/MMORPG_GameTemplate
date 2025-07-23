@@ -46,26 +46,26 @@
 
 ## Unreal Engine Setup (10 minutes)
 
-1. **Copy Plugin to Your Project**
+1. **Open the Game Template Project**
    ```bash
-   cp -r UnrealEngine/Plugins/MMORPGTemplate /path/to/YourProject/Plugins/
+   # Navigate to the game template directory
+   cd MMORPGTemplate
    ```
 
 2. **Generate Project Files**
-   - Right-click your .uproject file
+   - Right-click MMORPGTemplate.uproject
    - Select "Generate Visual Studio project files" (Windows)
    - Or use UnrealBuildTool on Mac/Linux
 
 3. **Open and Compile**
-   - Open your project in Unreal Engine
-   - It will prompt to compile the plugin
-   - Click "Yes" to compile
+   - Open MMORPGTemplate.uproject in Unreal Engine 5.6
+   - The project will compile automatically
+   - Wait for compilation to complete
 
-4. **Enable the Plugin**
-   - Edit > Plugins
-   - Search for "MMORPG"
-   - Check "Enabled"
-   - Restart the editor
+4. **Verify Setup**
+   - The game template should open in the editor
+   - Check that all systems are loaded
+   - (Note: Client networking features pending implementation)
 
 5. **Access MMORPG Tools**
    - Window > MMORPG Tools > Dashboard
@@ -108,7 +108,7 @@ postgres:
 ### Docker Not Running
 Make sure Docker Desktop is running before using docker-compose.
 
-### Plugin Compilation Errors
+### Project Compilation Errors
 - Ensure you're using Unreal Engine 5.6
 - Check that all dependencies in the .Build.cs files are available
 - Try deleting Intermediate and Binaries folders and recompiling
@@ -117,7 +117,7 @@ Make sure Docker Desktop is running before using docker-compose.
 
 1. **Explore the Code**
    - Backend: Check `mmorpg-backend/cmd/gateway/main.go`
-   - Plugin: Look at `MMORPGCore.h` and `MMORPGCore.cpp`
+   - Game Template: Look at `MMORPGTemplate.h` and `MMORPGTemplate.cpp`
    - Protos: Review the message definitions in `pkg/proto/`
 
 2. **Run with Hot Reload (Backend)**

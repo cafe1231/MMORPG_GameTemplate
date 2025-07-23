@@ -17,7 +17,7 @@ mmorpg-backend/pkg/proto/          # Proto definitions
     ├── go/                       # Go generated files
     └── cpp/                      # C++ generated files
 
-UnrealEngine/Plugins/MMORPGTemplate/Source/MMORPGCore/
+MMORPGTemplate/Source/MMORPGTemplate/
 ├── Public/Proto/
 │   ├── MMORPGProtoHelper.h       # Proto utilities
 │   └── MMORPGProtoTypes.h        # Type definitions
@@ -209,7 +209,7 @@ make proto
 
 ### 3. Copy Generated C++ Files
 ```bash
-cp pkg/proto/gen/cpp/* ../UnrealEngine/Plugins/MMORPGTemplate/Source/MMORPGCore/Public/Proto/Generated/
+cp pkg/proto/gen/cpp/* ../MMORPGTemplate/Source/MMORPGTemplate/Public/Proto/Generated/
 ```
 
 ### 4. Add Wrapper Types (Optional)

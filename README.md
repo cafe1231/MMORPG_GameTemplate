@@ -10,7 +10,7 @@
 
 A professional, production-ready MMORPG template that scales from local development to millions of concurrent players.
 
-[Documentation](docs/) • [Quick Start](docs/guides/QUICKSTART.md) • [Architecture](docs/phases/phase1/PHASE1_DESIGN.md) • [GitHub](https://github.com/cafe1231/Plugin_MMORPG_CORE)
+[Documentation](docs/) • [Quick Start](docs/guides/QUICKSTART.md) • [Architecture](docs/phases/phase1/PHASE1_DESIGN.md) • [GitHub](https://github.com/cafe1231/MMORPG_GameTemplate)
 
 </div>
 
@@ -18,8 +18,8 @@ A professional, production-ready MMORPG template that scales from local developm
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/cafe1231/Plugin_MMORPG_CORE.git
-cd Plugin_MMORPG_CORE
+git clone https://github.com/cafe1231/MMORPG_GameTemplate.git
+cd MMORPG_GameTemplate
 
 # 2. Start backend services
 cd mmorpg-backend
@@ -27,7 +27,7 @@ docker-compose up -d
 go run cmd/gateway/main.go
 
 # 3. Open Unreal Engine project
-# Open UnrealEngine/MMORPGTemplate.uproject in UE 5.6
+# Open MMORPGTemplate/MMORPGTemplate.uproject in UE 5.6
 
 # 4. Test connection (F1 in-game for console)
 mmorpg.connect localhost 8090
@@ -84,17 +84,17 @@ mmorpg.connect localhost 8090
 ## 🏗️ Project Structure
 
 ```
-Plugin_MMORPG_CORE/
+MMORPG_GameTemplate/
 ├── mmorpg-backend/          # Go microservices
 │   ├── cmd/                 # Service entry points
 │   ├── internal/            # Business logic
 │   ├── pkg/proto/           # Protocol definitions
 │   └── deployments/         # Docker/K8s configs
-├── UnrealEngine/            
-│   └── Plugins/
-│       └── MMORPGTemplate/  # Core plugin
-│           ├── Source/      # C++ implementation
-│           └── Content/     # Blueprint assets
+├── MMORPGTemplate/          # Unreal Engine 5.6 Game Project
+│   ├── Source/              # C++ game code
+│   ├── Content/             # Game assets
+│   ├── Config/              # Configuration files
+│   └── Plugins/             # Additional plugins
 ├── docs/                    # Documentation
 │   ├── guides/             # How-to guides
 │   ├── phases/             # Development phases
@@ -165,7 +165,7 @@ See [Git Workflow Guide](docs/guides/CI_CD_GUIDE.md) for detailed contribution g
 ## 📞 Support
 
 - **Discord**: [Join our community](#) (coming soon)
-- **Issues**: [GitHub Issues](https://github.com/cafe1231/Plugin_MMORPG_CORE/issues)
+- **Issues**: [GitHub Issues](https://github.com/cafe1231/MMORPG_GameTemplate/issues)
 - **Email**: support@example.com (coming soon)
 
 ## 🚀 Roadmap
@@ -186,5 +186,5 @@ This is a commercial template. Usage is subject to the license agreement.
 <div align="center">
 Built with ❤️ for game developers who dream big
 
-⭐ Star us on [GitHub](https://github.com/cafe1231/Plugin_MMORPG_CORE) if you find this helpful!
+⭐ Star us on [GitHub](https://github.com/cafe1231/MMORPG_GameTemplate) if you find this helpful!
 </div>
