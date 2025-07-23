@@ -90,7 +90,7 @@ MMORPG_CONSOLE_COMMAND(MyCommand, "My command description",
 The console requires a UI widget to be created in the editor. Here's how to set it up:
 
 ### 1. Create Console Widget Blueprint
-1. In Content Browser, navigate to `Plugins/MMORPGTemplate/Content/UI/`
+1. In Content Browser, navigate to `Content/UI/` (create if doesn't exist)
 2. Right-click → User Interface → Widget Blueprint
 3. Name it `WBP_DeveloperConsole`
 4. Set parent class to `MMORPGConsoleWidget`
