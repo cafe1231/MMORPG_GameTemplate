@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -18,13 +21,10 @@ import (
 func main() {
 	ctx := context.Background()
 
-	log := logger.New("gateway")
+	log := logger.NewWithService("gateway")
 	log.Info("Starting MMORPG Gateway Service...")
 
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
-	}
+	cfg := config.Load()
 
 	metricsServer := metrics.NewServer(cfg.Metrics.Port)
 	go func() {
@@ -35,7 +35,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.Server.Port),
-		Handler:      setupRoutes(),
+		Handler:      setupRoutes(cfg, log),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -64,15 +64,22 @@ func main() {
 	log.Info("Gateway service stopped")
 }
 
-func setupRoutes() http.Handler {
+func setupRoutes(cfg *config.Config, log logger.Logger) http.Handler {
 	mux := http.NewServeMux()
+	
+	// Auth service URL
+	authServiceHost := "localhost"
+	if os.Getenv("GO_ENV") == "development" {
+		authServiceHost = "auth"
+	}
+	authServiceURL := fmt.Sprintf("http://%s:%d", authServiceHost, cfg.Auth.Port)
 	
 	// Enable CORS for development
 	handler := func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, User-Agent")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, User-Agent, X-Device-ID")
 			
 			if r.Method == "OPTIONS" {
 				w.WriteHeader(http.StatusOK)
@@ -142,6 +149,80 @@ func setupRoutes() http.Handler {
 		}
 		json.NewEncoder(w).Encode(response)
 	}))
+	
+	// Auth endpoints - proxy to auth service
+	authProxy := createAuthProxy(authServiceURL, log)
+	mux.HandleFunc("/api/v1/auth/register", handler(authProxy))
+	mux.HandleFunc("/api/v1/auth/login", handler(authProxy))
+	mux.HandleFunc("/api/v1/auth/logout", handler(authProxy))
+	mux.HandleFunc("/api/v1/auth/refresh", handler(authProxy))
+	mux.HandleFunc("/api/v1/auth/verify", handler(authProxy))
 
 	return mux
+}
+
+// createAuthProxy creates a proxy handler for auth service
+func createAuthProxy(authServiceURL string, log logger.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Build the target URL
+		targetURL := authServiceURL + r.URL.Path
+		
+		// Read the request body
+		var bodyBytes []byte
+		if r.Body != nil {
+			bodyBytes, _ = io.ReadAll(r.Body)
+			r.Body.Close()
+		}
+		
+		// Create a new request to the auth service
+		proxyReq, err := http.NewRequest(r.Method, targetURL, bytes.NewBuffer(bodyBytes))
+		if err != nil {
+			log.WithError(err).Error("Failed to create proxy request")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "Internal server error",
+			})
+			return
+		}
+		
+		// Copy headers
+		for name, values := range r.Header {
+			for _, value := range values {
+				proxyReq.Header.Add(name, value)
+			}
+		}
+		
+		// Add client IP for auth service
+		proxyReq.Header.Set("X-Forwarded-For", r.RemoteAddr)
+		proxyReq.Header.Set("X-Real-IP", strings.Split(r.RemoteAddr, ":")[0])
+		
+		// Make the request
+		client := &http.Client{
+			Timeout: 30 * time.Second,
+		}
+		
+		resp, err := client.Do(proxyReq)
+		if err != nil {
+			log.WithError(err).Error("Failed to proxy request to auth service")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "Auth service unavailable",
+			})
+			return
+		}
+		defer resp.Body.Close()
+		
+		// Copy response headers
+		for name, values := range resp.Header {
+			for _, value := range values {
+				w.Header().Add(name, value)
+			}
+		}
+		
+		// Copy status code
+		w.WriteHeader(resp.StatusCode)
+		
+		// Copy response body
+		io.Copy(w, resp.Body)
+	}
 }

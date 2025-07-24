@@ -13,6 +13,7 @@ services:
       POSTGRES_PASSWORD: dev
       POSTGRES_DB: mmorpg
       POSTGRES_INITDB_ARGS: "-E UTF8"
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
@@ -80,12 +81,11 @@ services:
     environment:
       - SERVICE_NAME=gateway
       - GO_ENV=development
-      - DB_HOST=postgres
-      - DB_USER=dev
-      - DB_PASSWORD=dev
-      - DB_NAME=mmorpg
-      - REDIS_HOST=redis
-      - NATS_URL=nats://nats:4222
+      - MMORPG_SERVER_PORT=8090
+      - MMORPG_DATABASE_URL=postgres://dev:dev@postgres:5432/mmorpg?sslmode=disable
+      - MMORPG_REDIS_URL=redis://redis:6379
+      - MMORPG_NATS_URL=nats://nats:4222
+      - MMORPG_AUTH_PORT=8081
       - LOG_LEVEL=debug
     depends_on:
       postgres:
@@ -123,7 +123,12 @@ services:
       - REDIS_HOST=redis
       - NATS_URL=nats://nats:4222
       - LOG_LEVEL=debug
-      - JWT_SECRET=dev-secret-change-in-production
+      - JWT_ACCESS_SECRET=dev-access-secret-change-in-production
+      - JWT_REFRESH_SECRET=dev-refresh-secret-change-in-production
+      - MMORPG_AUTH_PORT=8081
+      - MMORPG_DATABASE_URL=postgres://dev:dev@postgres:5432/mmorpg?sslmode=disable
+      - MMORPG_REDIS_URL=redis://redis:6379
+      - MMORPG_NATS_URL=nats://nats:4222
     depends_on:
       postgres:
         condition: service_healthy
