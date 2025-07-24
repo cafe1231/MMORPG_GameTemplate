@@ -15,7 +15,9 @@ public class MMORPGCore : ModuleRules
 		
 		PrivateDependencyModuleNames.AddRange(new string[] {
 			"Slate",
-			"SlateCore"
+			"SlateCore",
+			"Json",
+			"JsonUtilities"
 		});
 	}
 }
