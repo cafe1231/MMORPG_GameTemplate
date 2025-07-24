@@ -17,3 +17,12 @@ security:
 metrics:
   port: "9090"
   enabled: true
+
+auth:
+  port: 8081
+  jwtAccessSecret: "dev-access-secret-change-in-production"
+  jwtRefreshSecret: "dev-refresh-secret-change-in-production"
+  maxSessionsPerUser: 10
+  loginRateLimit: 10
+  loginRateLimitWindow: 900
+  maxLoginAttempts: 5

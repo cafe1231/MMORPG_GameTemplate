@@ -15,6 +15,7 @@ type Config struct {
 	Security SecurityConfig
 	Game     GameConfig
 	Metrics  MetricsConfig
+	Auth     AuthConfig
 }
 
 type ServerConfig struct {
@@ -70,36 +71,16 @@ type MetricsConfig struct {
 	Endpoint string
 }
 
-func Load() (*Config, error) {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("./config")
-	viper.AddConfigPath("/etc/mmorpg/")
-
-	viper.SetEnvPrefix("MMORPG")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv()
-
-	setDefaults()
-
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return nil, fmt.Errorf("error reading config file: %w", err)
-		}
-	}
-
-	cfg := &Config{}
-	if err := viper.Unmarshal(cfg); err != nil {
-		return nil, fmt.Errorf("error unmarshaling config: %w", err)
-	}
-
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-
-	return cfg, nil
+type AuthConfig struct {
+	Port              int
+	JWTAccessSecret   string
+	JWTRefreshSecret  string
+	MaxSessionsPerUser int
+	LoginRateLimit    int
+	LoginRateLimitWindow int
+	MaxLoginAttempts  int
 }
+
 
 func setDefaults() {
 	// Server defaults
@@ -147,6 +128,15 @@ func setDefaults() {
 	viper.SetDefault("metrics.port", "9090")
 	viper.SetDefault("metrics.enabled", true)
 	viper.SetDefault("metrics.endpoint", "/metrics")
+
+	// Auth defaults
+	viper.SetDefault("auth.port", 8081)
+	viper.SetDefault("auth.jwtAccessSecret", "change-me-access-secret")
+	viper.SetDefault("auth.jwtRefreshSecret", "change-me-refresh-secret")
+	viper.SetDefault("auth.maxSessionsPerUser", 10)
+	viper.SetDefault("auth.loginRateLimit", 10)
+	viper.SetDefault("auth.loginRateLimitWindow", 900) // 15 minutes
+	viper.SetDefault("auth.maxLoginAttempts", 5)
 }
 
 func (c *Config) Validate() error {
@@ -182,4 +172,59 @@ func GetEnvOrDefault(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// Convenience getters for common values
+func (c *Config) DatabaseURL() string {
+	return c.Database.URL
+}
+
+func (c *Config) RedisURL() string {
+	return c.Redis.URL
+}
+
+func (c *Config) NATSURL() string {
+	return c.NATS.URL
+}
+
+// Load is a convenience function that loads config and panics on error
+// For services that need to fail fast on config errors
+func Load() *Config {
+	cfg, err := LoadConfig()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to load config: %v", err))
+	}
+	return cfg
+}
+
+// LoadConfig loads the configuration and returns error
+func LoadConfig() (*Config, error) {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("./config")
+	viper.AddConfigPath("/etc/mmorpg/")
+
+	viper.SetEnvPrefix("MMORPG")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
+	setDefaults()
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			return nil, fmt.Errorf("error reading config file: %w", err)
+		}
+	}
+
+	cfg := &Config{}
+	if err := viper.Unmarshal(cfg); err != nil {
+		return nil, fmt.Errorf("error unmarshaling config: %w", err)
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
+	}
+
+	return cfg, nil
 }

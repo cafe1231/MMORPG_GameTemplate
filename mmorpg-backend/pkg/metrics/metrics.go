@@ -3,7 +3,10 @@ package metrics
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -152,6 +155,12 @@ func init() {
 	)
 }
 
+// Init initializes metrics (for explicit initialization)
+func Init() {
+	// Metrics are already registered in init()
+	// This function exists for explicit initialization if needed
+}
+
 type Server struct {
 	port string
 }
@@ -210,4 +219,30 @@ func UpdatePlayerCount(world, region string, count float64) {
 
 func UpdateEntityCount(world, entityType string, count float64) {
 	EntityCount.WithLabelValues(world, entityType).Set(count)
+}
+
+// GinMiddleware returns a gin middleware for recording HTTP metrics
+func GinMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		startTime := time.Now()
+		
+		// Process request
+		c.Next()
+		
+		// Record metrics
+		duration := time.Since(startTime).Seconds()
+		statusCode := strconv.Itoa(c.Writer.Status())
+		method := c.Request.Method
+		path := c.FullPath()
+		if path == "" {
+			path = "unknown"
+		}
+		
+		service := c.GetString("service")
+		if service == "" {
+			service = "gateway"
+		}
+		
+		RecordRequestDuration(service, method, statusCode, duration)
+	}
 }

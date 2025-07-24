@@ -259,6 +259,6 @@ VALUES
     ('admin@example.com', 'admin', '$2a$10$YourHashHere', 'active', true);
 
 -- Grant permissions (adjust as needed)
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO mmorpg_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO mmorpg_user;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO mmorpg_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO dev;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO dev;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO dev;
