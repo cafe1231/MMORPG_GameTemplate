@@ -3,7 +3,7 @@
 <div align="center">
 
 [![Unreal Engine](https://img.shields.io/badge/Unreal%20Engine-5.6-blue?logo=unrealengine)](https://www.unrealengine.com/)
-[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://golang.org/)
 [![Protocol Buffers](https://img.shields.io/badge/Protocol%20Buffers-3.0-green)](https://protobuf.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-Commercial-red)](LICENSE)
@@ -25,6 +25,7 @@ cd MMORPG_GameTemplate
 cd mmorpg-backend
 docker-compose up -d
 go run cmd/gateway/main.go
+go run cmd/auth/main.go  # Run auth service
 
 # 3. Open Unreal Engine project
 # Open MMORPGTemplate/MMORPGTemplate.uproject in UE 5.6
@@ -35,7 +36,7 @@ mmorpg.connect localhost 8090
 
 ## 🎯 Current Status
 
-### 🔄 Phase 0: Foundation (73% COMPLETE)
+### ✅ Phase 0: Foundation (100% COMPLETE)
 - **Infrastructure**: Go microservices with hexagonal architecture
 - **Networking**: HTTP/WebSocket client-server communication
 - **Serialization**: Protocol Buffers integration (Go + UE5)
@@ -45,11 +46,20 @@ mmorpg.connect localhost 8090
 - **Error Handling**: Comprehensive error system with retry logic
 - **Documentation**: Complete guides and API references
 
-### 🚧 Phase 1: Authentication (NEXT)
-- JWT-based authentication
-- Account creation and management
-- Character system
-- Session handling
+### 🚧 Phase 1: Authentication (45% - Phase 1A COMPLETE)
+
+#### Phase 1A - Backend (✅ COMPLETE)
+- JWT-based authentication with access/refresh tokens
+- User registration and login endpoints
+- Session management with PostgreSQL + Redis
+- Password hashing with bcrypt
+- NATS event publishing
+
+#### Phase 1B - Frontend (🔄 IN PROGRESS)
+- Login/Register UI in UE5
+- Auth manager subsystem
+- Character creation and selection
+- Auto-reconnection with auth
 
 ## 🛠️ Key Features
 
@@ -76,7 +86,7 @@ mmorpg.connect localhost 8090
 
 - **Unreal Engine 5.6+**
 - **Visual Studio 2022** (Windows) or Xcode 14+ (macOS)
-- **Go 1.21+**
+- **Go 1.23+**
 - **Docker Desktop**
 - **Git**
 - **8GB+ RAM** (16GB recommended)
@@ -87,6 +97,8 @@ mmorpg.connect localhost 8090
 MMORPG_GameTemplate/
 ├── mmorpg-backend/              # Go microservices backend (✅ Complete)
 │   ├── cmd/                     # Service entry points
+│   │   ├── gateway/             # API Gateway service
+│   │   └── auth/                # Authentication service (✅ Phase 1A)
 │   ├── internal/                # Business logic (hexagonal architecture)
 │   ├── pkg/proto/               # Protocol Buffer definitions
 │   └── deployments/             # Docker/K8s configurations
@@ -119,6 +131,17 @@ make test
 # Connection test
 curl http://localhost:8090/api/v1/test
 
+# Authentication API tests
+# Register a new user
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","username":"testuser","password":"password123"}'
+
+# Login
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+
 # In-game console commands
 mmorpg.status        # Check system status
 mmorpg.test          # Run connection test
@@ -141,6 +164,7 @@ help                 # List all commands
 - [Quick Start Guide](docs/guides/QUICKSTART.md)
 - [Development Setup](docs/guides/DEVELOPMENT_SETUP.md)
 - [Phase 0 Summary](docs/phases/phase0/PHASE0_SUMMARY.md)
+- [Phase 1A Completion Report](docs/phases/phase1/PHASE1A_COMPLETION_REPORT.md)
 
 ### Development Guides
 - [Protocol Buffers Integration](docs/guides/PROTOBUF_INTEGRATION.md)
@@ -176,8 +200,10 @@ See [Git Workflow Guide](docs/guides/CI_CD_GUIDE.md) for detailed contribution g
 
 ## 🚀 Roadmap
 
-- [x] Phase 0: Foundation (Complete)
-- [ ] Phase 1: Authentication System
+- [x] Phase 0: Foundation (✅ Complete)
+- [ ] Phase 1: Authentication System (🚧 45% - Phase 1A Complete)
+  - [x] Phase 1A: Backend Auth (JWT, Login, Register)
+  - [ ] Phase 1B: Frontend Integration (UI, Character System)
 - [ ] Phase 2: Real-time Networking
 - [ ] Phase 3: Core Gameplay Systems
 - [ ] Phase 4: Production Tools
