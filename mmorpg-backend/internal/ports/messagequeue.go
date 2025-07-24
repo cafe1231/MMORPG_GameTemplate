@@ -17,8 +17,8 @@ type MessageQueue interface {
 	PublishWithReply(ctx context.Context, subject string, data []byte, timeout time.Duration) ([]byte, error)
 	
 	// Subscribing
-	Subscribe(ctx context.Context, subject string, handler MessageHandler) (Subscription, error)
-	QueueSubscribe(ctx context.Context, subject, queue string, handler MessageHandler) (Subscription, error)
+	Subscribe(ctx context.Context, subject string, handler MessageHandler) (QueueSubscription, error)
+	QueueSubscribe(ctx context.Context, subject, queue string, handler MessageHandler) (QueueSubscription, error)
 	
 	// Request-Reply pattern
 	Request(ctx context.Context, subject string, data []byte, timeout time.Duration) ([]byte, error)
@@ -29,32 +29,44 @@ type MessageQueue interface {
 	GetStreamInfo(ctx context.Context, stream string) (*StreamInfo, error)
 }
 
-// MessageHandler handles incoming messages
-type MessageHandler func(msg *Message) error
+// QueueSubscription represents a message queue subscription
+type QueueSubscription interface {
+	// Unsubscribe from the subscription
+	Unsubscribe() error
+	
+	// IsValid checks if the subscription is still valid
+	IsValid() bool
+	
+	// Drain drains any pending messages
+	Drain() error
+}
 
-// Message represents a message in the queue
-type Message struct {
+// MessageHandler handles incoming messages
+type MessageHandler func(msg *QueueMessage) error
+
+// QueueMessage represents a message in the queue
+type QueueMessage struct {
 	Subject  string
 	Data     []byte
 	Headers  map[string]string
-	Reply    string
+	ReplyTo  string
 	Sequence uint64
 }
 
 // Reply sends a reply to a message
-func (m *Message) Reply(data []byte) error {
+func (m *QueueMessage) Reply(data []byte) error {
 	// Implementation will be provided by the adapter
 	return nil
 }
 
 // Ack acknowledges message processing
-func (m *Message) Ack() error {
+func (m *QueueMessage) Ack() error {
 	// Implementation will be provided by the adapter
 	return nil
 }
 
 // Nack negative acknowledges message processing
-func (m *Message) Nack() error {
+func (m *QueueMessage) Nack() error {
 	// Implementation will be provided by the adapter
 	return nil
 }
@@ -99,7 +111,7 @@ type StreamInfo struct {
 // Consumer represents a message consumer
 type Consumer interface {
 	// Fetch messages
-	Fetch(batch int, timeout time.Duration) ([]*Message, error)
+	Fetch(batch int, timeout time.Duration) ([]*QueueMessage, error)
 	
 	// Consumer info
 	Info() (*ConsumerInfo, error)

@@ -57,19 +57,27 @@
    - Select "Generate Visual Studio project files" (Windows)
    - Or use UnrealBuildTool on Mac/Linux
 
-3. **Open and Compile**
-   - Open MMORPGTemplate.uproject in Unreal Engine 5.6
-   - The project will compile automatically
-   - Wait for compilation to complete
+3. **Build the Project**
+   - Open MMORPGTemplate.sln in Visual Studio
+   - Set configuration to "Development Editor" and "Win64"
+   - Build solution (Ctrl+Shift+B)
+   - Or open the .uproject and let UE5 compile when prompted
 
-4. **Verify Setup**
-   - The game template should open in the editor
-   - Check that all systems are loaded
-   - (Note: Client networking features pending implementation)
+4. **Verify Module Loading**
+   When the editor opens, check the Output Log for:
+   ```
+   LogTemp: MMORPGCore Module Started
+   LogTemp: MMORPGProto Module Started
+   LogTemp: MMORPGNetwork Module Started
+   LogTemp: MMORPGUI Module Started
+   ```
 
-5. **Access MMORPG Tools**
-   - Window > MMORPG Tools > Dashboard
-   - Or click the MMORPG button in the toolbar
+5. **Module Overview**
+   The project includes 4 C++ modules:
+   - **MMORPGCore**: Foundation systems
+   - **MMORPGProto**: Protocol Buffer handling
+   - **MMORPGNetwork**: HTTP/WebSocket clients
+   - **MMORPGUI**: UI and developer console
 
 ## Testing the Setup
 

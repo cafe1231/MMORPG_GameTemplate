@@ -169,6 +169,59 @@ go build -o bin/chat cmd/chat/main.go
 go build -o bin/world cmd/world/main.go
 ```
 
+## Unreal Engine 5.6 Module Structure
+
+### Module Overview
+
+The UE5.6 project is organized into the following C++ modules:
+
+1. **MMORPGCore** (Loading Phase: PreDefault)
+   - Foundation systems and interfaces
+   - Error handling subsystem
+   - Core type definitions
+
+2. **MMORPGProto** (Loading Phase: PreDefault)
+   - Protocol Buffer integration
+   - Type converters for UE5 ↔ Proto
+   - Message serialization
+
+3. **MMORPGNetwork** (Loading Phase: Default)
+   - HTTP client implementation
+   - WebSocket client implementation
+   - Network manager singleton
+
+4. **MMORPGUI** (Loading Phase: Default)
+   - Developer console system
+   - Base widget classes
+   - HUD framework
+
+### Module Dependencies
+
+```
+MMORPGTemplate (Main Game Module)
+├── MMORPGCore
+├── MMORPGNetwork (depends on Core, Proto)
+├── MMORPGProto (depends on Core)
+└── MMORPGUI (depends on Core)
+```
+
+### Building the UE5 Project
+
+1. Generate project files:
+   ```
+   Right-click MMORPGTemplate.uproject → Generate Visual Studio project files
+   ```
+
+2. Open in Visual Studio:
+   ```
+   Open MMORPGTemplate.sln
+   ```
+
+3. Build configuration:
+   - Configuration: Development Editor
+   - Platform: Win64
+   - Build: Ctrl+Shift+B
+
 ## Unreal Engine Setup
 
 ### 1. Install Unreal Engine 5.6
@@ -178,11 +231,13 @@ go build -o bin/world cmd/world/main.go
 ### 2. Generate Project Files
 ```bash
 # Windows
-cd UnrealEngine
+cd MMORPGTemplate
+# Right-click MMORPGTemplate.uproject → Generate Visual Studio project files
+# Or use command line:
 "C:\Program Files\Epic Games\UE_5.6\Engine\Build\BatchFiles\GenerateProjectFiles.bat" -projectfiles -project="%cd%\MMORPGTemplate.uproject" -game -rocket -progress
 
 # macOS/Linux
-cd UnrealEngine
+cd MMORPGTemplate
 "/Users/Shared/Epic Games/UE_5.6/Engine/Build/BatchFiles/Mac/GenerateProjectFiles.sh" -projectfiles -project="$(pwd)/MMORPGTemplate.uproject" -game -rocket -progress
 ```
 
@@ -191,17 +246,17 @@ cd UnrealEngine
 - **macOS**: Open `MMORPGTemplate.xcworkspace` in Xcode
 - **Linux**: Use your preferred IDE with CMake support
 
-### 4. Build the Plugin
+### 4. Build the Project
 ```bash
 # Windows (from VS Developer Command Prompt)
-msbuild MMORPGTemplate.sln /p:Configuration=Development /p:Platform=Win64
+msbuild MMORPGTemplate.sln /p:Configuration="Development Editor" /p:Platform=Win64
 
 # macOS/Linux
 make MMORPGTemplateEditor
 ```
 
-### 5. Configure Plugin Settings
-Create `UnrealEngine/Config/DefaultMMORPG.ini`:
+### 5. Configure Project Settings
+Create `MMORPGTemplate/Config/DefaultMMORPG.ini`:
 ```ini
 [/Script/MMORPGCore.MMORPGSettings]
 DefaultServerHost=localhost
@@ -228,9 +283,10 @@ go run cmd/auth/main.go
 ```
 
 ### 2. Launch Unreal Editor
-- Open `UnrealEngine/MMORPGTemplate.uproject`
+- Open `MMORPGTemplate/MMORPGTemplate.uproject`
 - Wait for shaders to compile
-- Open the test map: `Content/MMORPG/Maps/TestMap`
+- If prompted to compile modules, click "Yes"
+- Open the test map: `Content/MMORPG/Maps/TestMap` (when available)
 
 ### 3. Test Connection
 - Place `BP_ConnectionTest` actor in the level
