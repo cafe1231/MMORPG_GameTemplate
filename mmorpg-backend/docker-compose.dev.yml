@@ -75,7 +75,7 @@ services:
     working_dir: /app
     command: air -c .air.toml
     ports:
-      - "8080:8080"
+      - "8080:8090"
       - "2345:2345"  # Delve debugger
     environment:
       - SERVICE_NAME=gateway

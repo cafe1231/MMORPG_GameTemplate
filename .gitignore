@@ -90,6 +90,10 @@ UnrealEngine/DerivedDataCache/*
 # Visual Studio Code
 .vscode/
 
+# Visual Studio Config
+.vsconfig
+*.vsconfig
+
 # Rider
 .idea/
 
@@ -131,6 +135,8 @@ UnrealEngine/Saved/SourceControl/*
 # Temporary files
 MMORPGTemplate/Saved/Temp/*
 UnrealEngine/Saved/Temp/*
+MMORPGTemplate/Temp/*
+mmorpg-backend/tmp/*
 
 # Audio analysis
 MMORPGTemplate/Saved/AudioAnalysis/*
@@ -151,9 +157,38 @@ MMORPGTemplate/Content/Developers/*
 UnrealEngine/Content/Developers/*
 
 # Game Animation Sample Content (not part of MMORPG template)
-MMORPGTemplate/Content/*
+# MMORPGTemplate/Content/*
 # But keep our own content when we create it
-!MMORPGTemplate/Content/MMORPG/
+# !MMORPGTemplate/Content/MMORPG/
+
+# Keep essential Content folders but ignore heavy assets
+MMORPGTemplate/Content/StarterContent/
+MMORPGTemplate/Content/ThirdPersonBP/
+MMORPGTemplate/Content/FirstPersonBP/
+MMORPGTemplate/Content/VehicleBP/
+MMORPGTemplate/Content/FlyingBP/
+MMORPGTemplate/Content/TopDownBP/
+MMORPGTemplate/Content/SideScrollerBP/
+MMORPGTemplate/Content/PuzzleBP/
+MMORPGTemplate/Content/2DSideScrollerBP/
+MMORPGTemplate/Content/AnimStarterPack/
+MMORPGTemplate/Content/ModularScifiHallways/
+MMORPGTemplate/Content/ModularScifiProps/
+
+# Ignore large asset files
+*.uasset
+*.umap
+*.ubulk
+*.upk
+*.udk
+
+# But keep config and source files
+!MMORPGTemplate/Config/**
+!MMORPGTemplate/Source/**
+
+# Keep plugin configs but not binaries
+!MMORPGTemplate/Plugins/**/Config/**
+!MMORPGTemplate/Plugins/**/Source/**
 
 # Shader cache
 MMORPGTemplate/Saved/ShaderDebugInfo/*

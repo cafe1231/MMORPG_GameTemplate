@@ -100,16 +100,16 @@ func (n *NATSMessageQueue) PublishWithReply(ctx context.Context, subject string,
 }
 
 // Subscribe creates a subscription to a subject
-func (n *NATSMessageQueue) Subscribe(ctx context.Context, subject string, handler ports.MessageHandler) (ports.Subscription, error) {
+func (n *NATSMessageQueue) Subscribe(ctx context.Context, subject string, handler ports.MessageHandler) (ports.QueueSubscription, error) {
 	if n.conn == nil {
 		return nil, ports.ErrMQConnection
 	}
 	
 	sub, err := n.conn.Subscribe(subject, func(msg *nats.Msg) {
-		portMsg := &ports.Message{
+		portMsg := &ports.QueueMessage{
 			Subject: msg.Subject,
 			Data:    msg.Data,
-			Reply:   msg.Reply,
+			ReplyTo: msg.Reply,
 			Headers: natsHeadersToMap(msg.Header),
 		}
 		
@@ -126,16 +126,16 @@ func (n *NATSMessageQueue) Subscribe(ctx context.Context, subject string, handle
 }
 
 // QueueSubscribe creates a queue subscription to a subject
-func (n *NATSMessageQueue) QueueSubscribe(ctx context.Context, subject, queue string, handler ports.MessageHandler) (ports.Subscription, error) {
+func (n *NATSMessageQueue) QueueSubscribe(ctx context.Context, subject, queue string, handler ports.MessageHandler) (ports.QueueSubscription, error) {
 	if n.conn == nil {
 		return nil, ports.ErrMQConnection
 	}
 	
 	sub, err := n.conn.QueueSubscribe(subject, queue, func(msg *nats.Msg) {
-		portMsg := &ports.Message{
+		portMsg := &ports.QueueMessage{
 			Subject: msg.Subject,
 			Data:    msg.Data,
-			Reply:   msg.Reply,
+			ReplyTo: msg.Reply,
 			Headers: natsHeadersToMap(msg.Header),
 		}
 		
@@ -224,7 +224,11 @@ func (s *natsSubscription) Unsubscribe() error {
 	return s.sub.Unsubscribe()
 }
 
-func (s *natsSubscription) Close() error {
+func (s *natsSubscription) IsValid() bool {
+	return s.sub.IsValid()
+}
+
+func (s *natsSubscription) Drain() error {
 	return s.sub.Drain()
 }
 

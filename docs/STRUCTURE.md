@@ -22,8 +22,9 @@ docs/
 │   ├── DEVELOPER_CONSOLE.md   # Console usage guide
 │   └── ERROR_HANDLING.md      # Error system guide
 │
-├── architecture/              # Architecture documentation (future)
-│   └── (to be added)
+├── architecture/              # Architecture documentation
+│   ├── ARCHITECTURE.md        # System architecture overview
+│   └── CLIENT_MODULES.md      # UE5 client module architecture
 │
 └── reports/                   # Test reports and analysis
     ├── TEST_ENVIRONMENT_REPORT.md

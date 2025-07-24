@@ -4,11 +4,11 @@ FROM golang:1.21-alpine
 # Install dependencies
 RUN apk add --no-cache git make gcc musl-dev
 
-# Install air for hot reload
-RUN go install github.com/cosmtrek/air@latest
+# Install air for hot reload (v1.49.0 is compatible with Go 1.21)
+RUN go install github.com/cosmtrek/air@v1.49.0
 
-# Install delve debugger
-RUN go install github.com/go-delve/delve/cmd/dlv@latest
+# Install delve debugger (v1.21.2 is compatible with Go 1.21)
+RUN go install github.com/go-delve/delve/cmd/dlv@v1.21.2
 
 # Set working directory
 WORKDIR /app
