@@ -20,7 +20,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o gateway ./cmd/gateway
 
 # Final stage
-FROM alpine:3.19
+FROM alpine:3.22
 
 # Install ca-certificates for HTTPS
 RUN apk --no-cache add ca-certificates
