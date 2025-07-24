@@ -58,7 +58,7 @@
 - POST `/api/v1/auth/refresh` - Token refresh
 - POST `/api/v1/auth/logout` - Session invalidation
 
-### Phase 1B - Frontend Integration (Next)
+### Phase 1B - Frontend Integration 🚧 IN PROGRESS (Started: 2025-07-24)
 
 ### Planned Features
 - Character creation and management
@@ -80,8 +80,9 @@
 ### Timeline
 - Phase 1A Start Date: 2025-07-24
 - Phase 1A Completion: 2025-07-24 ✅
+- Phase 1B Start Date: 2025-07-24
 - Phase 1B Duration: 1-2 weeks
-- Target Completion: TBD
+- Target Completion: 2025-08-07 (estimated)
 
 ## GitHub Repository
 
@@ -162,4 +163,4 @@ All backend authentication components are implemented and tested:
 - **Phase Details**: See individual phase documents in `docs/phases/`
 
 ---
-Last Updated: 2025-07-24 (Phase 1A Complete)
+Last Updated: 2025-07-24 (Phase 1B Started)
