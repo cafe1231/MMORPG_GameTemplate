@@ -2,21 +2,12 @@
 	"FileVersion": 3,
 	"EngineAssociation": "5.6",
 	"Category": "",
-	"Description": "Professional MMORPG Template for Unreal Engine 5.6",
+	"Description": "",
 	"Modules": [
-		{
-			"Name": "MMORPGTemplate",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine",
-				"CoreUObject"
-			]
-		},
 		{
 			"Name": "MMORPGCore",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "MMORPGNetwork",
@@ -24,14 +15,14 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "MMORPGProto",
-			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
-		},
-		{
 			"Name": "MMORPGUI",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostDefault"
+		},
+		{
+			"Name": "MMORPGTemplate",
+			"Type": "Runtime",
+			"LoadingPhase": "PostDefault"
 		}
 	],
 	"Plugins": [

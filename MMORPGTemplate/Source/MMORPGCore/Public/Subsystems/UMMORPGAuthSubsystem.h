@@ -3,160 +3,86 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Types/FAuthTypes.h"
-#include "CoreTypes.h"
+#include "Http.h"
 #include "UMMORPGAuthSubsystem.generated.h"
 
-class UMMORPGHTTPClient;
-class UMMORPGNetworkSubsystem;
-class UMMORPGAuthSaveGame;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAuthResponseDelegate, const FAuthResponse&, Response);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUserInfoReceivedDelegate, const FUserInfo&, UserInfo);
 
-/**
- * Authentication subsystem for managing user login, registration, and token management
- */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class MMORPGCORE_API UMMORPGAuthSubsystem : public UGameInstanceSubsystem
 {
     GENERATED_BODY()
 
 public:
-    // USubsystem implementation
+    UMMORPGAuthSubsystem();
+
+    // Subsystem interface
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
-    /**
-     * Login with email and password
-     * @param Email User's email address
-     * @param Password User's password
-     * @param OnComplete Callback when login succeeds
-     * @param OnFailed Callback when login fails
-     */
+    // Authentication methods
     UFUNCTION(BlueprintCallable, Category = "MMORPG|Auth", meta = (DisplayName = "Login"))
-    void Login(const FString& Email, const FString& Password, const FOnLoginComplete& OnComplete, const FOnLoginFailed& OnFailed);
+    void Login(const FLoginRequest& Request);
 
-    /**
-     * Register a new user account
-     * @param Email User's email address
-     * @param Username User's display name
-     * @param Password User's password
-     * @param OnComplete Callback when registration succeeds
-     * @param OnFailed Callback when registration fails
-     */
     UFUNCTION(BlueprintCallable, Category = "MMORPG|Auth", meta = (DisplayName = "Register"))
-    void Register(const FString& Email, const FString& Username, const FString& Password, const FOnRegisterComplete& OnComplete, const FOnRegisterFailed& OnFailed);
+    void Register(const FRegisterRequest& Request);
 
-    /**
-     * Logout the current user
-     * @param OnComplete Callback when logout completes
-     */
     UFUNCTION(BlueprintCallable, Category = "MMORPG|Auth", meta = (DisplayName = "Logout"))
-    void Logout(const FOnLogoutComplete& OnComplete);
+    void Logout();
 
-    /**
-     * Refresh the authentication token
-     * @param OnComplete Callback when refresh succeeds
-     * @param OnFailed Callback when refresh fails
-     */
     UFUNCTION(BlueprintCallable, Category = "MMORPG|Auth", meta = (DisplayName = "Refresh Token"))
-    void RefreshToken(const FOnRefreshTokenComplete& OnComplete, const FOnRefreshTokenFailed& OnFailed);
+    void RefreshToken();
 
-    /**
-     * Check if user is currently logged in
-     * @return True if user has valid authentication token
-     */
-    UFUNCTION(BlueprintCallable, Category = "MMORPG|Auth", BlueprintPure)
-    bool IsLoggedIn() const;
+    // Check if user is authenticated
+    UFUNCTION(BlueprintPure, Category = "MMORPG|Auth")
+    bool IsAuthenticated() const;
 
-    /**
-     * Get the current user's information
-     * @return Current user info if logged in, empty struct otherwise
-     */
-    UFUNCTION(BlueprintCallable, Category = "MMORPG|Auth", BlueprintPure)
-    FUserInfo GetCurrentUser() const;
+    // Get current auth tokens
+    UFUNCTION(BlueprintPure, Category = "MMORPG|Auth")
+    FAuthTokens GetAuthTokens() const { return CurrentTokens; }
 
-    /**
-     * Get the current access token
-     * @return Current access token or empty string if not logged in
-     */
-    UFUNCTION(BlueprintCallable, Category = "MMORPG|Auth", BlueprintPure)
-    FString GetAccessToken() const;
+    // Get current user info
+    UFUNCTION(BlueprintPure, Category = "MMORPG|Auth")
+    FUserInfo GetUserInfo() const { return CurrentUserInfo; }
 
-    /**
-     * Set whether to remember login credentials
-     * @param bRemember True to save credentials for auto-login
-     */
+    // Set server URL
     UFUNCTION(BlueprintCallable, Category = "MMORPG|Auth")
-    void SetRememberMe(bool bRemember);
+    void SetServerURL(const FString& URL);
 
-    /**
-     * Try to auto-login with saved credentials
-     * @param OnComplete Callback when auto-login succeeds
-     * @param OnFailed Callback when auto-login fails
-     */
-    UFUNCTION(BlueprintCallable, Category = "MMORPG|Auth")
-    void TryAutoLogin(const FOnLoginComplete& OnComplete, const FOnLoginFailed& OnFailed);
-
-    // Blueprint events
+    // Events
     UPROPERTY(BlueprintAssignable, Category = "MMORPG|Auth")
-    FOnLoginCompleteBP OnLoginCompleteBP;
+    FOnAuthResponseDelegate OnLoginResponse;
 
     UPROPERTY(BlueprintAssignable, Category = "MMORPG|Auth")
-    FOnLoginFailedBP OnLoginFailedBP;
+    FOnAuthResponseDelegate OnRegisterResponse;
 
     UPROPERTY(BlueprintAssignable, Category = "MMORPG|Auth")
-    FOnRegisterCompleteBP OnRegisterCompleteBP;
-
-    UPROPERTY(BlueprintAssignable, Category = "MMORPG|Auth")
-    FOnRegisterFailedBP OnRegisterFailedBP;
-
-    UPROPERTY(BlueprintAssignable, Category = "MMORPG|Auth")
-    FOnLogoutCompleteBP OnLogoutCompleteBP;
+    FOnUserInfoReceivedDelegate OnUserInfoReceived;
 
 protected:
-    // Internal functions
-    void HandleLoginResponse(const FString& Response, const FOnLoginComplete& OnComplete, const FOnLoginFailed& OnFailed);
-    void HandleRegisterResponse(const FString& Response, const FOnRegisterComplete& OnComplete, const FOnRegisterFailed& OnFailed);
-    void HandleRefreshResponse(const FString& Response, const FOnRefreshTokenComplete& OnComplete, const FOnRefreshTokenFailed& OnFailed);
-    
+    // HTTP response handlers
+    void HandleLoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+    void HandleRegisterResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+    void HandleRefreshResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+    void HandleUserInfoResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+    // Parse responses
+    FAuthResponse ParseAuthResponse(const FString& JsonString);
+    FUserInfo ParseUserInfo(const FString& JsonString);
+
+    // Save/Load auth data
     void SaveAuthData();
     void LoadAuthData();
-    void ClearAuthData();
-    
-    bool IsTokenExpired() const;
-    void ScheduleTokenRefresh();
-    void CancelTokenRefresh();
 
-    // Convert structs to/from JSON
-    FString LoginRequestToJson(const FLoginRequest& Request) const;
-    FString RegisterRequestToJson(const FRegisterRequest& Request) const;
-    FString RefreshRequestToJson(const FRefreshTokenRequest& Request) const;
-    
-    bool ParseLoginResponse(const FString& JsonString, FLoginResponse& OutResponse) const;
-    bool ParseRegisterResponse(const FString& JsonString, FRegisterResponse& OutResponse) const;
-    bool ParseRefreshResponse(const FString& JsonString, FRefreshTokenResponse& OutResponse) const;
-    bool ParseUserInfo(const TSharedPtr<FJsonObject>& JsonObject, FUserInfo& OutUserInfo) const;
+    // HTTP helpers
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> CreateHttpRequest(const FString& Verb, const FString& Path);
 
 private:
-    // Cached subsystems
-    UPROPERTY()
-    UMMORPGNetworkSubsystem* NetworkSubsystem;
+    FAuthTokens CurrentTokens;
+    FUserInfo CurrentUserInfo;
+    FString ServerURL;
 
-    // Current authentication state
-    FLoginResponse CurrentAuthData;
-    FUserInfo CurrentUser;
-    FDateTime TokenExpiryTime;
-    bool bIsLoggedIn;
-    bool bRememberMe;
-
-    // Token refresh timer
-    FTimerHandle TokenRefreshTimer;
-
-    // Save game
-    UPROPERTY()
-    UMMORPGAuthSaveGame* AuthSaveGame;
-
-    // API endpoints
-    static const FString LoginEndpoint;
-    static const FString RegisterEndpoint;
-    static const FString LogoutEndpoint;
-    static const FString RefreshEndpoint;
+    // Save game slot name
+    static const FString AuthSaveSlotName;
 };

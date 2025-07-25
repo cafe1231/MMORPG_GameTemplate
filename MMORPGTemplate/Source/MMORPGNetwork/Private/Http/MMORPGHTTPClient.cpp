@@ -1,176 +1,98 @@
 #include "Http/MMORPGHTTPClient.h"
-#include "Dom/JsonObject.h"
-#include "Serialization/JsonSerializer.h"
-#include "Serialization/JsonWriter.h"
-#include "Serialization/JsonReader.h"
-#include "Engine/World.h"
-#include "MMORPGNetwork.h"
+#include "HttpModule.h"
+#include "Interfaces/IHttpResponse.h"
 
-UMMORPGHTTPRequest* UMMORPGHTTPRequest::MakeHTTPRequest(
-	UObject* WorldContextObject,
-	const FString& URL,
-	EMMORPGHTTPVerb Verb,
-	const TMap<FString, FString>& Headers,
-	const FString& Body)
+UMMORPGHTTPClient::UMMORPGHTTPClient()
 {
-	UMMORPGHTTPRequest* BlueprintNode = NewObject<UMMORPGHTTPRequest>();
-	BlueprintNode->WorldContextObject = WorldContextObject;
-	BlueprintNode->RequestURL = URL;
-	BlueprintNode->RequestVerb = Verb;
-	BlueprintNode->RequestHeaders = Headers;
-	BlueprintNode->RequestBody = Body;
-	return BlueprintNode;
+    BaseURL = TEXT("http://localhost:3000");
+    Timeout = 10.0f;
 }
 
-void UMMORPGHTTPRequest::Activate()
+void UMMORPGHTTPClient::SendGetRequest(const FString& URL)
 {
-	// Create HTTP request
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	// Set URL and verb
-	HttpRequest->SetURL(RequestURL);
-	HttpRequest->SetVerb(VerbToString(RequestVerb));
-
-	// Set headers
-	for (const auto& Header : RequestHeaders)
-	{
-		HttpRequest->SetHeader(Header.Key, Header.Value);
-	}
-
-	// Set content type if not specified
-	if (!RequestHeaders.Contains(TEXT("Content-Type")) && !RequestBody.IsEmpty())
-	{
-		HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	}
-
-	// Set body for POST/PUT
-	if (RequestVerb == EMMORPGHTTPVerb::POST || RequestVerb == EMMORPGHTTPVerb::PUT)
-	{
-		HttpRequest->SetContentAsString(RequestBody);
-	}
-
-	// Bind response callback
-	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UMMORPGHTTPRequest::OnResponseReceived);
-
-	// Send request
-	if (!HttpRequest->ProcessRequest())
-	{
-		OnError.Broadcast(TEXT("Failed to send HTTP request"));
-		SetReadyToDestroy();
-	}
-
-	UE_LOG(LogMMORPGNetwork, Log, TEXT("HTTP Request sent: %s %s"), *VerbToString(RequestVerb), *RequestURL);
+    TMap<FString, FString> EmptyHeaders;
+    SendGetRequestWithHeaders(URL, EmptyHeaders);
 }
 
-void UMMORPGHTTPRequest::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void UMMORPGHTTPClient::SendGetRequestWithHeaders(const FString& URL, const TMap<FString, FString>& Headers)
 {
-	if (bWasSuccessful && Response.IsValid())
-	{
-		int32 ResponseCode = Response->GetResponseCode();
-		FString ResponseContent = Response->GetContentAsString();
-
-		UE_LOG(LogMMORPGNetwork, Log, TEXT("HTTP Response received: Code=%d"), ResponseCode);
-
-		if (ResponseCode >= 200 && ResponseCode < 300)
-		{
-			OnSuccess.Broadcast(ResponseContent, ResponseCode);
-		}
-		else
-		{
-			FString ErrorMessage = FString::Printf(TEXT("HTTP Error: %d - %s"), ResponseCode, *ResponseContent);
-			OnError.Broadcast(ErrorMessage);
-		}
-	}
-	else
-	{
-		FString ErrorMessage = TEXT("HTTP Request failed: No response");
-		if (Request.IsValid())
-		{
-			ErrorMessage = FString::Printf(TEXT("HTTP Request failed: %s"), *Request->GetURL());
-		}
-		
-		UE_LOG(LogMMORPGNetwork, Error, TEXT("%s"), *ErrorMessage);
-		OnError.Broadcast(ErrorMessage);
-	}
-
-	SetReadyToDestroy();
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    
+    FString FullURL = URL.StartsWith(TEXT("http")) ? URL : BaseURL + URL;
+    Request->SetURL(FullURL);
+    Request->SetVerb(TEXT("GET"));
+    Request->SetTimeout(Timeout);
+    
+    // Set headers
+    for (const auto& Header : Headers)
+    {
+        Request->SetHeader(Header.Key, Header.Value);
+    }
+    
+    ProcessRequest(Request);
 }
 
-FString UMMORPGHTTPRequest::VerbToString(EMMORPGHTTPVerb Verb) const
+void UMMORPGHTTPClient::SendPostRequest(const FString& URL, const FString& ContentString)
 {
-	switch (Verb)
-	{
-		case EMMORPGHTTPVerb::GET: return TEXT("GET");
-		case EMMORPGHTTPVerb::POST: return TEXT("POST");
-		case EMMORPGHTTPVerb::PUT: return TEXT("PUT");
-		case EMMORPGHTTPVerb::DELETE: return TEXT("DELETE");
-		default: return TEXT("GET");
-	}
+    TMap<FString, FString> EmptyHeaders;
+    SendPostRequestWithHeaders(URL, ContentString, EmptyHeaders);
 }
 
-// UMMORPGHTTPClient implementation
-
-FString UMMORPGHTTPClient::BuildURL(const FString& BaseURL, const TMap<FString, FString>& QueryParams)
+void UMMORPGHTTPClient::SendPostRequestWithHeaders(const FString& URL, const FString& ContentString, const TMap<FString, FString>& Headers)
 {
-	if (QueryParams.Num() == 0)
-	{
-		return BaseURL;
-	}
-
-	FString Result = BaseURL;
-	Result += TEXT("?");
-
-	bool bFirst = true;
-	for (const auto& Param : QueryParams)
-	{
-		if (!bFirst)
-		{
-			Result += TEXT("&");
-		}
-		Result += FString::Printf(TEXT("%s=%s"), 
-			*FPlatformHttp::UrlEncode(Param.Key),
-			*FPlatformHttp::UrlEncode(Param.Value));
-		bFirst = false;
-	}
-
-	return Result;
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    
+    FString FullURL = URL.StartsWith(TEXT("http")) ? URL : BaseURL + URL;
+    Request->SetURL(FullURL);
+    Request->SetVerb(TEXT("POST"));
+    Request->SetTimeout(Timeout);
+    Request->SetContentAsString(ContentString);
+    
+    // Set default content type if not provided
+    bool bHasContentType = false;
+    for (const auto& Header : Headers)
+    {
+        Request->SetHeader(Header.Key, Header.Value);
+        if (Header.Key.Equals(TEXT("Content-Type"), ESearchCase::IgnoreCase))
+        {
+            bHasContentType = true;
+        }
+    }
+    
+    if (!bHasContentType)
+    {
+        Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+    }
+    
+    ProcessRequest(Request);
 }
 
-bool UMMORPGHTTPClient::ParseJsonResponse(const FString& JsonString, UStruct* StructDefinition, void* OutStruct)
+void UMMORPGHTTPClient::SetBaseURL(const FString& InBaseURL)
 {
-	if (!StructDefinition || !OutStruct)
-	{
-		return false;
-	}
-
-	TSharedPtr<FJsonObject> JsonObject;
-	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonString);
-
-	if (!FJsonSerializer::Deserialize(Reader, JsonObject) || !JsonObject.IsValid())
-	{
-		return false;
-	}
-
-	// Use FJsonObjectConverter when available
-	// For now, return false as we need proper JSON conversion
-	// This will be implemented when we have specific message types
-	return false;
+    BaseURL = InBaseURL;
 }
 
-FString UMMORPGHTTPClient::EncodeStructToJson(UStruct* StructDefinition, const void* InStruct)
+void UMMORPGHTTPClient::SetTimeout(float InTimeout)
 {
-	if (!StructDefinition || !InStruct)
-	{
-		return TEXT("{}");
-	}
-
-	// Use FJsonObjectConverter when available
-	// For now, return empty object
-	// This will be implemented when we have specific message types
-	return TEXT("{}");
+    Timeout = FMath::Max(1.0f, InTimeout);
 }
 
-FString UMMORPGHTTPClient::CreateAuthHeader(const FString& Token)
+void UMMORPGHTTPClient::ProcessRequest(TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request)
 {
-	return FString::Printf(TEXT("Bearer %s"), *Token);
+    Request->OnProcessRequestComplete().BindUObject(this, &UMMORPGHTTPClient::OnResponseReceived);
+    Request->ProcessRequest();
+}
+
+void UMMORPGHTTPClient::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+    int32 ResponseCode = 0;
+    FString ResponseContent = TEXT("");
+    
+    if (bWasSuccessful && Response.IsValid())
+    {
+        ResponseCode = Response->GetResponseCode();
+        ResponseContent = Response->GetContentAsString();
+    }
+    
+    OnRequestComplete.Broadcast(bWasSuccessful, ResponseCode, ResponseContent);
 }
