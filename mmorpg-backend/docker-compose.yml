@@ -16,6 +16,7 @@ services:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev
       POSTGRES_DB: mmorpg
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d:ro
@@ -63,7 +64,7 @@ services:
     container_name: mmorpg-adminer
     restart: unless-stopped
     ports:
-      - "8090:8080"
+      - "8091:8080"
     environment:
       ADMINER_DEFAULT_SERVER: postgres
     depends_on:

@@ -1,5 +1,5 @@
 server:
-  port: "8090"
+  port: "8080"
   host: "0.0.0.0"
   
 database:
@@ -15,7 +15,7 @@ security:
   jwtSecret: "dev-secret-change-in-production"
   
 metrics:
-  port: "9090"
+  port: "9091"
   enabled: true
 
 auth:
