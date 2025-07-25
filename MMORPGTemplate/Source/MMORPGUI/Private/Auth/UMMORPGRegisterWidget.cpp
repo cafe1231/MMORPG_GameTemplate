@@ -55,6 +55,7 @@ void UMMORPGRegisterWidget::OnRegisterClicked()
     Request.Email = Email;
     Request.Username = Username;
     Request.Password = Password;
+    Request.bAcceptTerms = true; // TODO: Add checkbox support
 
     AuthSubsystem->Register(Request);
 }

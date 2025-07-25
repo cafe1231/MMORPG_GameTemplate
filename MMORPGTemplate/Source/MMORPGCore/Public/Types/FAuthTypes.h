@@ -34,12 +34,16 @@ struct FRegisterRequest
     
     UPROPERTY(BlueprintReadWrite, Category = "MMORPG|Auth")
     FString Username;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "MMORPG|Auth")
+    bool bAcceptTerms;
 
     FRegisterRequest()
     {
         Email = "";
         Password = "";
         Username = "";
+        bAcceptTerms = false;
     }
 };
 
