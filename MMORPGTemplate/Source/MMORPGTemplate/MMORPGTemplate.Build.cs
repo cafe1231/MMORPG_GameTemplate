@@ -16,7 +16,6 @@ public class MMORPGTemplate : ModuleRules
 			"EnhancedInput",
 			"MMORPGCore",
 			"MMORPGNetwork",
-			"MMORPGProto",
 			"MMORPGUI"
 		});
 

@@ -1,0 +1,66 @@
+diff --git a/MMORPGTemplate/Source/MMORPGNetwork/Private/WebSocket/MMORPGWebSocketClient.cpp b/MMORPGTemplate/Source/MMORPGNetwork/Private/WebSocket/MMORPGWebSocketClient.cpp
+index 066cfb3..54685ef 100644
+--- a/MMORPGTemplate/Source/MMORPGNetwork/Private/WebSocket/MMORPGWebSocketClient.cpp
++++ b/MMORPGTemplate/Source/MMORPGNetwork/Private/WebSocket/MMORPGWebSocketClient.cpp
+@@ -12,7 +12,13 @@ UMMORPGWebSocketClient::~UMMORPGWebSocketClient()
+ 	Cleanup();
+ }
+ 
+-void UMMORPGWebSocketClient::Connect(const FString& URL, const FString& Protocol, const TMap<FString, FString>& Headers)
++void UMMORPGWebSocketClient::Connect(const FString& URL, const FString& Protocol)
++{
++	TMap<FString, FString> EmptyHeaders;
++	ConnectWithHeaders(URL, Protocol, EmptyHeaders);
++}
++
++void UMMORPGWebSocketClient::ConnectWithHeaders(const FString& URL, const FString& Protocol, const TMap<FString, FString>& Headers)
+ {
+ 	if (ConnectionState != EWebSocketState::Disconnected)
+ 	{
+diff --git a/MMORPGTemplate/Source/MMORPGNetwork/Public/Http/MMORPGHTTPClient.h b/MMORPGTemplate/Source/MMORPGNetwork/Public/Http/MMORPGHTTPClient.h
+index 5a111d1..c03f662 100644
+--- a/MMORPGTemplate/Source/MMORPGNetwork/Public/Http/MMORPGHTTPClient.h
++++ b/MMORPGTemplate/Source/MMORPGNetwork/Public/Http/MMORPGHTTPClient.h
+@@ -98,7 +98,7 @@ class MMORPGNETWORK_API UMMORPGHTTPClient : public UBlueprintFunctionLibrary
+ 	 * @param OutStruct The struct to populate
+ 	 * @return True if parsing was successful
+ 	 */
+-	UFUNCTION(BlueprintCallable, Category = "MMORPG|Network", meta = (DisplayName = "Parse JSON Response", CallInEditor = "true"))
++	// Not exposed to Blueprint due to void* parameter limitations
+ 	static bool ParseJsonResponse(const FString& JsonString, UStruct* StructDefinition, void* OutStruct);
+ 
+ 	/**
+@@ -106,7 +106,7 @@ class MMORPGNETWORK_API UMMORPGHTTPClient : public UBlueprintFunctionLibrary
+ 	 * @param InStruct The struct to encode
+ 	 * @return JSON string representation
+ 	 */
+-	UFUNCTION(BlueprintCallable, Category = "MMORPG|Network", meta = (DisplayName = "Encode to JSON", CallInEditor = "true"))
++	// Not exposed to Blueprint due to void* parameter limitations
+ 	static FString EncodeStructToJson(UStruct* StructDefinition, const void* InStruct);
+ 
+ 	/**
+diff --git a/MMORPGTemplate/Source/MMORPGNetwork/Public/WebSocket/MMORPGWebSocketClient.h b/MMORPGTemplate/Source/MMORPGNetwork/Public/WebSocket/MMORPGWebSocketClient.h
+index da0b03b..ff468bb 100644
+--- a/MMORPGTemplate/Source/MMORPGNetwork/Public/WebSocket/MMORPGWebSocketClient.h
++++ b/MMORPGTemplate/Source/MMORPGNetwork/Public/WebSocket/MMORPGWebSocketClient.h
+@@ -61,10 +61,18 @@ class MMORPGNETWORK_API UMMORPGWebSocketClient : public UObject
+ 	 * Connect to WebSocket server
+ 	 * @param URL The WebSocket URL (ws:// or wss://)
+ 	 * @param Protocol Optional protocol
+-	 * @param Headers Optional headers
+ 	 */
+ 	UFUNCTION(BlueprintCallable, Category = "MMORPG|WebSocket")
+-	void Connect(const FString& URL, const FString& Protocol = TEXT(""), const TMap<FString, FString>& Headers = TMap<FString, FString>());
++	void Connect(const FString& URL, const FString& Protocol = TEXT(""));
++
++	/**
++	 * Connect to WebSocket server with custom headers
++	 * @param URL The WebSocket URL (ws:// or wss://)
++	 * @param Protocol Optional protocol
++	 * @param Headers Custom headers to send with the connection
++	 */
++	UFUNCTION(BlueprintCallable, Category = "MMORPG|WebSocket", meta = (DisplayName = "Connect With Headers"))
++	void ConnectWithHeaders(const FString& URL, const FString& Protocol, const TMap<FString, FString>& Headers);
+ 
+ 	/**
+ 	 * Disconnect from WebSocket server
