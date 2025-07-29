@@ -68,6 +68,16 @@ docker-compose -f docker-compose.dev.yml up -d
 - JSON parsing for multiple response formats
 - Rate limiting handling
 
+### 📋 Phase 1.5: Character System (PLANNED - Next Phase)
+- Character creation and customization
+- Multiple characters per account
+- Character selection after login
+- Persistent character data storage
+- 3D preview system
+- Character slots management
+- Name validation and uniqueness
+- Class and race selection
+
 ## 🛠️ Key Features
 
 ### For Solo Developers
@@ -121,10 +131,20 @@ MMORPG_GameTemplate/
 ├── docs/                        # Comprehensive documentation
 │   ├── guides/                  # Development guides
 │   ├── phases/                  # Phase tracking
-│   └── architecture/            # System design
-│   └── reports/            # Test reports
-├── tools/                   # Development utilities
-└── .github/                 # CI/CD workflows
+│   │   ├── phase0/              # Foundation
+│   │   ├── phase1/              # Authentication
+│   │   ├── phase1_5/            # Character System (NEW)
+│   │   ├── phase2/              # Networking (Split)
+│   │   ├── phase3/              # Gameplay
+│   │   └── phase4/              # Production
+│   ├── architecture/            # System design
+│   ├── project/                 # Project management
+│   └── reports/                 # Test reports
+├── scripts/                     # Helper scripts
+│   ├── db/                      # Database scripts
+│   └── unreal/                  # Build scripts
+├── tools/                       # Development utilities
+└── .github/                     # CI/CD workflows
 ```
 
 ## 🧪 Testing
@@ -181,19 +201,24 @@ help                 # List all commands
 - [Phase 0 Summary](docs/phases/phase0/PHASE0_SUMMARY.md)
 - [Phase 1A Completion Report](docs/phases/phase1/PHASE1A_COMPLETION_REPORT.md)
 - [Phase 1B Completion Report](docs/phases/phase1/PHASE1B_COMPLETION_REPORT.md)
-- [Phase 1B Quick Start](PHASE1B_QUICKSTART.md)
-- [Phase 1B Implementation Summary](PHASE1B_IMPLEMENTATION_SUMMARY.md)
+- [Phase 1B Quick Start](docs/phases/phase1/PHASE1B_QUICKSTART.md)
+- [Phase 1B Implementation Summary](docs/phases/phase1/PHASE1B_IMPLEMENTATION_SUMMARY.md)
+- [Phase 1.5 Character System](docs/phases/phase1_5/PHASE1_5_SUMMARY.md)
 
 ### Development Guides
 - [Protocol Buffers Integration](docs/guides/PROTOBUF_INTEGRATION.md)
 - [Developer Console](docs/guides/DEVELOPER_CONSOLE.md)
 - [Error Handling](docs/guides/ERROR_HANDLING.md)
 - [CI/CD Pipeline](docs/guides/CI_CD_GUIDE.md)
+- [Database Migration Strategy](docs/architecture/DATABASE_MIGRATION_STRATEGY.md)
 
 ### Architecture
 - [System Design](docs/phases/phase1/PHASE1_DESIGN.md)
 - [Requirements](docs/phases/phase1/PHASE1_REQUIREMENTS.md)
 - [Development Tasks](docs/phases/phase1/PHASE1_TASKS.md)
+- [Phase 1.5 Overview](docs/phases/phase1_5/PHASE1_5_OVERVIEW.md)
+- [Phase 2 Restructuring](docs/phases/phase2/PHASE2_RESTRUCTURING.md)
+- [Project Timeline](docs/project/REVISED_PROJECT_TIMELINE.md)
 
 ## 🤝 Contributing
 
@@ -222,10 +247,14 @@ See [Git Workflow Guide](docs/guides/CI_CD_GUIDE.md) for detailed contribution g
 - [x] Phase 1: Authentication System (✅ Complete)
   - [x] Phase 1A: Backend Auth (JWT, Login, Register)
   - [x] Phase 1B: Frontend Integration (UI, Auth Subsystem)
-- [ ] Phase 2: Real-time Networking
-- [ ] Phase 3: Core Gameplay Systems
-- [ ] Phase 4: Production Tools
-- [ ] Phase 5: Advanced Features
+- [ ] Phase 1.5: Character System Foundation (🚧 Next - 3-4 weeks)
+- [ ] Phase 2: Real-time Networking (Split into 2A & 2B)
+  - [ ] Phase 2A: Core Infrastructure (3-4 weeks)
+  - [ ] Phase 2B: Advanced Features (3-4 weeks)
+- [ ] Phase 3: Core Gameplay Systems (8-10 weeks)
+- [ ] Phase 4: Production & Polish (4-6 weeks)
+
+**Total Timeline**: 28-38 weeks (7-9 months)
 
 ## 📄 License
 
