@@ -1,0 +1,89 @@
+-- Migration: create_characters_table
+-- Phase 1.5: Character System
+-- This is an example migration for Phase 1.5
+
+BEGIN;
+
+-- Create characters table
+CREATE TABLE characters (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    class VARCHAR(50) NOT NULL,
+    race VARCHAR(50) NOT NULL,
+    level INTEGER DEFAULT 1,
+    experience BIGINT DEFAULT 0,
+    health INTEGER DEFAULT 100,
+    max_health INTEGER DEFAULT 100,
+    mana INTEGER DEFAULT 100,
+    max_mana INTEGER DEFAULT 100,
+    stamina INTEGER DEFAULT 100,
+    max_stamina INTEGER DEFAULT 100,
+    position_x FLOAT DEFAULT 0,
+    position_y FLOAT DEFAULT 0,
+    position_z FLOAT DEFAULT 0,
+    rotation_yaw FLOAT DEFAULT 0,
+    zone_id INTEGER DEFAULT 1,
+    is_online BOOLEAN DEFAULT FALSE,
+    last_played TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    play_time INTERVAL DEFAULT '0 seconds',
+    is_deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT check_level CHECK (level >= 1 AND level <= 100),
+    CONSTRAINT check_health CHECK (health >= 0 AND health <= max_health),
+    CONSTRAINT check_mana CHECK (mana >= 0 AND mana <= max_mana),
+    CONSTRAINT check_stamina CHECK (stamina >= 0 AND stamina <= max_stamina)
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_characters_user_id ON characters(user_id);
+CREATE INDEX idx_characters_name_lower ON characters(LOWER(name));
+CREATE INDEX idx_characters_is_online ON characters(is_online) WHERE is_deleted = FALSE;
+CREATE INDEX idx_characters_zone_id ON characters(zone_id) WHERE is_online = TRUE;
+CREATE INDEX idx_characters_last_played ON characters(last_played DESC);
+
+-- Update users trigger
+CREATE TRIGGER update_characters_updated_at BEFORE UPDATE
+    ON characters FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Update user character count function
+CREATE OR REPLACE FUNCTION update_user_character_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE users 
+        SET character_count = character_count + 1 
+        WHERE id = NEW.user_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE users 
+        SET character_count = character_count - 1 
+        WHERE id = OLD.user_id;
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF OLD.is_deleted = FALSE AND NEW.is_deleted = TRUE THEN
+            UPDATE users 
+            SET character_count = character_count - 1 
+            WHERE id = NEW.user_id;
+        ELSIF OLD.is_deleted = TRUE AND NEW.is_deleted = FALSE THEN
+            UPDATE users 
+            SET character_count = character_count + 1 
+            WHERE id = NEW.user_id;
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger to update character count
+CREATE TRIGGER update_character_count
+    AFTER INSERT OR DELETE OR UPDATE OF is_deleted
+    ON characters
+    FOR EACH ROW
+    EXECUTE FUNCTION update_user_character_count();
+
+-- Add comments
+COMMENT ON TABLE characters IS 'Player character data';
+COMMENT ON COLUMN characters.play_time IS 'Total time played on this character';
+
+COMMIT;

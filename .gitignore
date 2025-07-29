@@ -287,6 +287,12 @@ logs/
 *.temp
 *.swp
 *~
+*.patch
+test-*.go
+fix-*.sql
+*.json.tmp
+login_response.json
+temp/
 
 # Database
 *.db
@@ -316,6 +322,8 @@ node_modules/
 secrets/
 .env.local
 .env.production
+.env.auth
+start-backend.bat
 
 # Tools
 tools/*.zip
