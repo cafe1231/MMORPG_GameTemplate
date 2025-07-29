@@ -328,3 +328,10 @@ start-backend.bat
 # Tools
 tools/*.zip
 tools/protoc-*-win64/nul
+
+# Claude AI specific files
+.claude/
+claude.json
+.claude.json
+claude-artifacts/
+.claude-code/
