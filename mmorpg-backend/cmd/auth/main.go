@@ -16,6 +16,7 @@ import (
 	appAuth "github.com/mmorpg-template/backend/internal/application/auth"
 	"github.com/mmorpg-template/backend/internal/config"
 	portsAuth "github.com/mmorpg-template/backend/internal/ports/auth"
+	"github.com/mmorpg-template/backend/pkg/db"
 	"github.com/mmorpg-template/backend/pkg/logger"
 	"github.com/mmorpg-template/backend/pkg/metrics"
 	"github.com/nats-io/nats.go"
@@ -38,14 +39,20 @@ func main() {
 	metrics.Init()
 
 	// Connect to PostgreSQL
-	db, err := initDatabase(cfg.DatabaseURL())
+	database, err := initDatabase(cfg.DatabaseURL())
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to database")
 	}
-	defer db.Close()
+	defer database.Close()
 
 	// Run migrations
-	if err := runMigrations(db); err != nil {
+	migrator, err := db.NewMigrator(database, log)
+	if err != nil {
+		log.WithError(err).Fatal("Failed to create migrator")
+	}
+	defer migrator.Close()
+
+	if err := migrator.Up(); err != nil {
 		log.WithError(err).Fatal("Failed to run migrations")
 	}
 
@@ -64,8 +71,8 @@ func main() {
 	defer nc.Close()
 
 	// Initialize repositories
-	userRepo := auth.NewPostgresUserRepository(db)
-	sessionRepo := auth.NewPostgresSessionRepository(db)
+	userRepo := auth.NewPostgresUserRepository(database)
+	sessionRepo := auth.NewPostgresSessionRepository(database)
 
 	// Initialize adapters
 	tokenGenerator := auth.NewJWTGenerator(
@@ -161,54 +168,6 @@ func initDatabase(databaseURL string) (*sql.DB, error) {
 	return db, nil
 }
 
-func runMigrations(db *sql.DB) error {
-	// For now, we'll just ensure the tables exist
-	// In production, use a proper migration tool like golang-migrate
-	
-	queries := []string{
-		// Users table
-		`CREATE TABLE IF NOT EXISTS users (
-			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			email VARCHAR(255) UNIQUE NOT NULL,
-			username VARCHAR(50) UNIQUE NOT NULL,
-			password_hash VARCHAR(255) NOT NULL,
-			email_verified BOOLEAN DEFAULT FALSE,
-			account_status INTEGER DEFAULT 1,
-			roles TEXT[] DEFAULT ARRAY['player'],
-			max_characters INTEGER DEFAULT 5,
-			character_count INTEGER DEFAULT 0,
-			is_premium BOOLEAN DEFAULT FALSE,
-			premium_expires_at TIMESTAMP WITH TIME ZONE,
-			created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-			updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-		)`,
-		// Sessions table
-		`CREATE TABLE IF NOT EXISTS sessions (
-			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			token_hash VARCHAR(255) NOT NULL,
-			device_id VARCHAR(255),
-			ip_address INET,
-			user_agent TEXT,
-			expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-			created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-			last_active TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-		)`,
-		// Indexes
-		`CREATE INDEX IF NOT EXISTS idx_users_email ON users(LOWER(email))`,
-		`CREATE INDEX IF NOT EXISTS idx_users_username ON users(LOWER(username))`,
-		`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)`,
-		`CREATE INDEX IF NOT EXISTS idx_sessions_token_hash ON sessions(token_hash)`,
-	}
-
-	for _, query := range queries {
-		if _, err := db.Exec(query); err != nil {
-			return fmt.Errorf("failed to execute migration: %w", err)
-		}
-	}
-
-	return nil
-}
 
 func initRedis(redisURL string) (*redisClient.Client, error) {
 	opts, err := redisClient.ParseURL(redisURL)
