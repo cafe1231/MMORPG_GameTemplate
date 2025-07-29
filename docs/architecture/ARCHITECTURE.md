@@ -43,6 +43,28 @@ mmorpg-backend/
 - Docker-based development environment
 - Comprehensive error handling and logging
 
+### Backend Services
+
+#### Gateway Service (Port 8090)
+- API gateway and request routing
+- WebSocket connection management
+- Load balancing and rate limiting
+- Protocol transformation (HTTP/WebSocket to NATS)
+
+#### Authentication Service (Port 8080)
+- User registration and login
+- JWT token generation and validation
+- Session management via Redis
+- Email verification (Phase 1)
+
+#### Character Service (Port 8082)
+- Character CRUD operations
+- Appearance and stats management
+- Position tracking
+- Soft delete with 30-day recovery
+- Redis caching for performance
+- NATS events for real-time updates
+
 ### Client Architecture (Unreal Engine 5.6)
 
 The client uses a modular C++ architecture:

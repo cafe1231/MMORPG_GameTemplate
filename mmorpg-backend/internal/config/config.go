@@ -8,14 +8,15 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Redis    RedisConfig
-	NATS     NATSConfig
-	Security SecurityConfig
-	Game     GameConfig
-	Metrics  MetricsConfig
-	Auth     AuthConfig
+	Server    ServerConfig
+	Database  DatabaseConfig
+	Redis     RedisConfig
+	NATS      NATSConfig
+	Security  SecurityConfig
+	Game      GameConfig
+	Metrics   MetricsConfig
+	Auth      AuthConfig
+	Character CharacterConfig
 }
 
 type ServerConfig struct {
@@ -81,6 +82,15 @@ type AuthConfig struct {
 	MaxLoginAttempts  int
 }
 
+type CharacterConfig struct {
+	Port                   int
+	MaxCharactersPerUser   int
+	MaxCharacterNameLength int
+	MinCharacterNameLength int
+	DefaultStartingLevel   int
+	DefaultStartingExp     int64
+}
+
 
 func setDefaults() {
 	// Server defaults
@@ -137,6 +147,14 @@ func setDefaults() {
 	viper.SetDefault("auth.loginRateLimit", 10)
 	viper.SetDefault("auth.loginRateLimitWindow", 900) // 15 minutes
 	viper.SetDefault("auth.maxLoginAttempts", 5)
+	
+	// Character defaults
+	viper.SetDefault("character.port", 8082)
+	viper.SetDefault("character.maxCharactersPerUser", 5)
+	viper.SetDefault("character.maxCharacterNameLength", 30)
+	viper.SetDefault("character.minCharacterNameLength", 3)
+	viper.SetDefault("character.defaultStartingLevel", 1)
+	viper.SetDefault("character.defaultStartingExp", 0)
 }
 
 func (c *Config) Validate() error {
