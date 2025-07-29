@@ -67,12 +67,22 @@ mmorpg-backend/
 
 ### Character Service
 - **Port**: 8082
-- **Purpose**: Character management
+- **Purpose**: Character management with hexagonal architecture
 - **Features**:
-  - Character CRUD operations
-  - Stats management
-  - Equipment handling
-  - Character validation
+  - Character CRUD operations with soft delete
+  - Appearance and stats management
+  - Position tracking
+  - Redis caching for performance
+  - NATS event publishing
+  - JWT authentication
+  - 30-day recovery for deleted characters
+- **API Endpoints**:
+  - POST `/api/v1/characters` - Create character
+  - GET `/api/v1/characters` - List characters
+  - GET `/api/v1/characters/{id}` - Get character
+  - PUT `/api/v1/characters/{id}` - Update character
+  - DELETE `/api/v1/characters/{id}` - Soft delete
+  - POST `/api/v1/characters/{id}/select` - Select character
 
 ### World Service
 - **Port**: 8083
@@ -91,6 +101,32 @@ mmorpg-backend/
   - Quest system
   - Combat calculations
   - NPC interactions
+
+## Database Migrations
+
+The project uses SQL migrations for database schema management:
+
+### Current Migrations
+- **001-003**: Core tables (users, sessions)
+- **004-009**: Character system tables
+  - `004_create_characters_table.sql` - Core character data
+  - `005_create_character_appearance_table.sql` - Visual customization
+  - `006_create_character_stats_table.sql` - RPG statistics
+  - `007_create_character_position_table.sql` - World location
+  - `008_create_character_initialization_triggers.sql` - Auto-initialization
+  - `009_create_character_performance_indexes.sql` - Query optimization
+
+### Running Migrations
+```bash
+# Run all migrations
+make migrate-up
+
+# Rollback last migration
+make migrate-down
+
+# Reset database
+make migrate-reset
+```
 
 ## Quick Start
 

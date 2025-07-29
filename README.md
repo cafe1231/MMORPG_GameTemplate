@@ -68,15 +68,24 @@ docker-compose -f docker-compose.dev.yml up -d
 - JSON parsing for multiple response formats
 - Rate limiting handling
 
-### 📋 Phase 1.5: Character System (PLANNED - Next Phase)
-- Character creation and customization
-- Multiple characters per account
-- Character selection after login
-- Persistent character data storage
+### 🚧 Phase 1.5: Character System (IN PROGRESS - Backend Complete ✅)
+
+#### Backend (100% COMPLETE ✅)
+- Character service with hexagonal architecture
+- PostgreSQL schema with 6 migrations
+- Full CRUD operations with soft delete
+- Redis caching with auto-invalidation
+- NATS event publishing
+- JWT authentication integration
+- 93.5% test coverage
+- All API endpoints tested
+
+#### Frontend (0% - Starting Next)
+- Character subsystem in UE5
+- Creation wizard UI
+- Character selection screen
 - 3D preview system
-- Character slots management
-- Name validation and uniqueness
-- Class and race selection
+- API integration
 
 ## 🛠️ Key Features
 
@@ -115,7 +124,8 @@ MMORPG_GameTemplate/
 ├── mmorpg-backend/              # Go microservices backend (✅ Complete)
 │   ├── cmd/                     # Service entry points
 │   │   ├── gateway/             # API Gateway service
-│   │   └── auth/                # Authentication service (✅ Phase 1A)
+│   │   ├── auth/                # Authentication service (✅ Phase 1)
+│   │   └── character/           # Character service (✅ Phase 1.5)
 │   ├── internal/                # Business logic (hexagonal architecture)
 │   ├── pkg/proto/               # Protocol Buffer definitions
 │   └── deployments/             # Docker/K8s configurations
@@ -168,6 +178,27 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"Password123!"}'
 
+# Character API tests (Phase 1.5 - NEW!)
+# Create a character (requires JWT token from login)
+curl -X POST http://localhost:8081/api/v1/characters \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "name": "MyWarrior",
+    "class": "warrior",
+    "appearance": {
+      "gender": "male",
+      "face_id": 1,
+      "hair_id": 2,
+      "skin_color": "#FFD4B2",
+      "hair_color": "#4A3728"
+    }
+  }'
+
+# List characters
+curl -X GET http://localhost:8081/api/v1/characters \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
 # Test in Unreal Engine
 # 1. Launch the game in editor
 # 2. Create account with UI
@@ -204,6 +235,7 @@ help                 # List all commands
 - [Phase 1B Quick Start](docs/phases/phase1/PHASE1B_QUICKSTART.md)
 - [Phase 1B Implementation Summary](docs/phases/phase1/PHASE1B_IMPLEMENTATION_SUMMARY.md)
 - [Phase 1.5 Character System](docs/phases/phase1_5/PHASE1_5_SUMMARY.md)
+- [Phase 1.5 Backend Testing Report](docs/phases/phase1_5/PHASE1_5_BACKEND_TESTING_REPORT.md) 🆕
 
 ### Development Guides
 - [Protocol Buffers Integration](docs/guides/PROTOBUF_INTEGRATION.md)
@@ -247,7 +279,7 @@ See [Git Workflow Guide](docs/guides/CI_CD_GUIDE.md) for detailed contribution g
 - [x] Phase 1: Authentication System (✅ Complete)
   - [x] Phase 1A: Backend Auth (JWT, Login, Register)
   - [x] Phase 1B: Frontend Integration (UI, Auth Subsystem)
-- [ ] Phase 1.5: Character System Foundation (🚧 Next - 3-4 weeks)
+- [ ] Phase 1.5: Character System Foundation (🚧 IN PROGRESS - Backend ✅, Frontend ⏳)
 - [ ] Phase 2: Real-time Networking (Split into 2A & 2B)
   - [ ] Phase 2A: Core Infrastructure (3-4 weeks)
   - [ ] Phase 2B: Advanced Features (3-4 weeks)

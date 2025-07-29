@@ -165,6 +165,10 @@ services:
       - REDIS_HOST=redis
       - NATS_URL=nats://nats:4222
       - LOG_LEVEL=debug
+      - MMORPG_CHARACTER_PORT=8082
+      - MMORPG_DATABASE_URL=postgres://dev:dev@postgres:5432/mmorpg?sslmode=disable
+      - MMORPG_REDIS_URL=redis://redis:6379
+      - MMORPG_NATS_URL=nats://nats:4222
     depends_on:
       postgres:
         condition: service_healthy
