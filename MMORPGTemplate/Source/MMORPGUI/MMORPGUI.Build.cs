@@ -27,7 +27,9 @@ public class MMORPGUI : ModuleRules
         PublicIncludePaths.AddRange(new string[] 
         {
             "MMORPGUI/Public",
-            "MMORPGUI/Public/Auth"
+            "MMORPGUI/Public/Auth",
+            "MMORPGUI/Public/Character",
+            "MMORPGUI/Public/Test"
         });
 
         // Private include paths

@@ -14,8 +14,7 @@ public class MMORPGNetwork : ModuleRules
             "HTTP",
             "Json",
             "JsonUtilities",
-            "WebSockets",
-            "MMORPGCore"
+            "WebSockets"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] 

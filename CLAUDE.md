@@ -9,7 +9,7 @@ This is a professional MMORPG template combining:
 - **Backend**: Go microservices using hexagonal architecture
 - **Communication**: HTTP/WebSocket with Protocol Buffers serialization
 
-The project has completed Phase 0 (Foundation) and Phase 1 (Authentication) with both backend JWT auth and frontend UI widgets fully implemented and tested.
+The project has completed Phase 0 (Foundation) and Phase 1 (Authentication) with both backend JWT auth and frontend UI widgets fully implemented and tested. Phase 1.5 (Character System) backend is complete, and frontend implementation is in progress.
 
 ## Common Commands
 
@@ -85,8 +85,10 @@ The UE5 client uses a modular architecture with 4 C++ modules:
 
 1. **MMORPGCore** - Foundation layer
    - `UMMORPGAuthSubsystem`: JWT token management, auto-refresh, auth state
+   - `UMMORPGCharacterSubsystem`: Character management, creation, selection, caching
    - Core types and interfaces shared across modules
    - Blueprint-exposed authentication types (FAuthResponse, FLoginRequest, etc.)
+   - Character data types (FCharacterInfo, FCharacterCreateRequest, etc.)
 
 2. **MMORPGNetwork** - Networking layer
    - HTTP client with retry logic and error handling
@@ -97,6 +99,7 @@ The UE5 client uses a modular architecture with 4 C++ modules:
    - `UMMORPGAuthWidget`: Main auth UI with widget switcher
    - `UMMORPGLoginWidget`: Login form with validation
    - `UMMORPGRegisterWidget`: Registration with terms acceptance
+   - `UMMORPGCharacterCreateWidget`: Character creation with appearance customization
    - All widgets are Blueprint-extendable
 
 4. **MMORPGTemplate** - Main game module
@@ -157,7 +160,10 @@ mmorpg-backend/
 
 **Frontend:**
 - `MMORPGTemplate/Source/MMORPGCore/Public/Auth/MMORPGAuthSubsystem.h` - Auth state management
+- `MMORPGTemplate/Source/MMORPGCore/Public/Subsystems/UMMORPGCharacterSubsystem.h` - Character management
+- `MMORPGTemplate/Source/MMORPGCore/Public/Types/FCharacterTypes.h` - Character data types
 - `MMORPGTemplate/Source/MMORPGUI/Public/Widgets/Auth/MMORPGAuthWidget.h` - Main auth UI
+- `MMORPGTemplate/Source/MMORPGUI/Public/Character/UMMORPGCharacterCreateWidget.h` - Character creation UI
 - `MMORPGTemplate/Source/MMORPGTemplate/Public/GameModes/MMORPGAuthGameMode.h` - Auth game mode
 
 **Backend:**
@@ -169,4 +175,5 @@ mmorpg-backend/
 **Documentation:**
 - `docs/phases/phase1/PHASE1B_QUICKSTART.md` - Frontend setup guide
 - `docs/phases/phase1/PHASE1B_REAL_AUTH_TEST_GUIDE.md` - Testing guide
+- `docs/phases/phase1_5/PHASE1_5_FRONTEND_PROGRESS.md` - Character system progress
 - `docs/architecture/ARCHITECTURE.md` - System design

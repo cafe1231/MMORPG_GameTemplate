@@ -19,7 +19,8 @@ public class MMORPGCore : ModuleRules
         PrivateDependencyModuleNames.AddRange(new string[] 
         { 
             "Slate", 
-            "SlateCore"
+            "SlateCore",
+            "MMORPGNetwork"  // Added here to avoid circular dependency
         });
 
         // Public include paths
